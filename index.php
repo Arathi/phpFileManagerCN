@@ -1,106 +1,116 @@
 <?
-//a:7:{s:4:"lang";s:2:"pt";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:13:"upload_filter";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:1093318224;s:7:"version";s:5:"0.9.1";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:1096651858;s:7:"version";s:5:"0.9.2";}
 /*--------------------------------------------------
- | phpFileManager 0.9.1
+ | PHP FILE MANAGER
+ +--------------------------------------------------
+ | phpFileManager 0.9.2
  | By Fabrício Seger Kolling
  | Copyright (c) 2004 Fabrício Seger Kolling
- | Email: dulldusk@nho.com.br
+ | E-mail: dulldusk@nho.com.br
  | URL: http://phpfm.sf.net
- | Last Changed: 2004-07-25
+ | Last Changed: 2004-09-01
  +--------------------------------------------------
- | CONFIGURATION AND INSTALATION NOTES
- +--------------------------------------------------
- | This program does not include any instalation or configuration
- | notes because it just does not require them.
- | Simply throw this file anywhere in your webserver and enjoy!!
- +--------------------------------------------------
- | LICENCE
- +--------------------------------------------------
- | This program is free software; you can redistribute it and/or modify
- | it under the terms of the GNU General Public License as published by
- | the Free Software Foundation; either version 2 of the License, or
- | (at your option) any later version.
- +--------------------------------------------------
- | This program is distributed in the hope that it will be useful,
- | but WITHOUT ANY WARRANTY; without even the implied warranty of
- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- | GNU General Public License for more details.
- +--------------------------------------------------
- | GNU General Public License is available on http://phpfm.sf.net/gpl.html
- +--------------------------------------------------
- | CONTRIBUTIONS
- +--------------------------------------------------
- | This program in part contains or is derived from the following GNU projects.
- | Thanks to your enffort !!
+ | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
  | TAR/GZIP/BZIP2/ZIP ARCHIVE CLASSES 2.0
  | By Devin Doucette
  | Copyright (c) 2004 Devin Doucette
- | Email: darksnoopy@shaw.ca
+ | E-mail: darksnoopy@shaw.ca
  | URL: http://www.phpclasses.org
  +--------------------------------------------------
+ | It is the AUTHOR'S REQUEST that you keep intact the above header information
+ | and notify him if you conceive BUGFIXES or any IMPROVEMENTS to this program.
+ +--------------------------------------------------
+ | LICENCE - GPL [ GNU General Public License ]
+ +--------------------------------------------------
+ | This program is FREE SOFTWARE; you can REDISTRIBUTE it and/or MODIFY
+ | it under the terms of the GNU General Public License as published by
+ | the Free Software Foundation; either version 2 of the License, or
+ | (at your option) any later version.
+ | This program is distributed in the hope that it will be useful,
+ | but WITHOUT ANY WARRANTY; without even the implied warranty of
+ | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ | GNU General Public License for more details.
+ | You should have gotten a copy of the GPL license with this program.
+ | If not, it can found at http://www.gnu.org/copyleft/gpl.html
+ +--------------------------------------------------
+ | CONFIGURATION AND INSTALATION NOTES
+ +--------------------------------------------------
+ | This program does not include any instalation or configuration
+ | notes because it simply does not require them.
+ | Just throw this file anywhere in your webserver and enjoy !!
+ +--------------------------------------------------
 */
+// +--------------------------------------------------
+// | Header and Globals
+// +--------------------------------------------------
+    header("Pragma: no-cache");
+    header("Cache-Control: no-store");
+    foreach ($_GET as $key => $val) $$key=htmldecode($val);
+    foreach ($_POST as $key => $val) $$key=htmldecode($val);
+    foreach ($_COOKIE as $key => $val) $$key=htmldecode($val);
+    if (empty($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["REMOTE_ADDR"]; //nao usa proxy
+    else $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; //usa proxy
+    $islinux = !(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+    $url_info = parse_url($_SERVER["HTTP_REFERER"]);
+    $doc_root = ($islinux) ? $_SERVER["DOCUMENT_ROOT"] : ucfirst($_SERVER["DOCUMENT_ROOT"]);
+    $script_filename = $doc_root.$_SERVER["PHP_SELF"];
+    $path_info = pathinfo($script_filename);
 // +--------------------------------------------------
 // | Config
 // +--------------------------------------------------
     $cfg = new config();
     $cfg->load();
-    //ini_set("display_errors",1);
-    //ini_set("error_reporting","E_ERROR");
-// +--------------------------------------------------
-// | Defauts
-// +--------------------------------------------------
-    header("Pragma: no-cache");
-    header("Cache-Control: no-store");
-    clearstatcache();
-    foreach ($HTTP_GET_VARS as $key => $val) $$key=htmldecode($val);
-    foreach ($HTTP_POST_VARS as $key => $val) $$key=htmldecode($val);
-    foreach ($HTTP_COOKIE_VARS as $key => $val) $$key=htmldecode($val);
-    if (empty($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["REMOTE_ADDR"]; //nao usa proxy
-    else $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; //usa proxy
-    $islinux = !(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
-    $path_info = pathinfo($_SERVER["SCRIPT_FILENAME"]);
-    $url_info = parse_url($_SERVER["HTTP_REFERER"]);
-    //$doc_root = str_replace(substr($url_info["path"],0,strrpos($url_info["path"],"/")),"",$path_info["dirname"]);
-    $doc_root = $_SERVER["DOCUMENT_ROOT"];
+    ini_set("display_errors",1);
+    ini_set("error_reporting",$error_reporting);
     if (!isset($dir_atual)){
         $dir_atual = $path_info["dirname"]."/";
         if (!$islinux) $dir_atual = ucfirst($dir_atual);
         @chmod($dir_atual,0777);
-    } else $dir_atual = formata_path($dir_atual);
+    } else $dir_atual = formatpath($dir_atual);
+    $is_reachable = (stristr($dir_atual,$doc_root)!==false);
     // Auto Expand Local Path
-    if (!isset($expanded_tree)){
-        $expanded_tree = "";
+    if (!isset($expanded_dir_list)){
+        $expanded_dir_list = "";
         $mat = explode("/",$path_info["dirname"]);
-        for ($x=0;$x<count($mat);$x++) $expanded_tree .= ":".$mat[$x];
-        setcookie("expanded_tree", $expanded_tree , 0 , "/");
+        for ($x=0;$x<count($mat);$x++) $expanded_dir_list .= ":".$mat[$x];
+        setcookie("expanded_dir_list", $expanded_dir_list, 0, "/");
     }
     if (!isset($fm_root_atual)){
-        if (strlen($fm_root)>0) $fm_root_atual = $fm_root;
+        if (strlen($fm_root)) $fm_root_atual = $fm_root;
         else {
             if (!$islinux) $fm_root_atual = ucfirst($path_info["dirname"]."/");
             else $fm_root_atual = $doc_root."/";
         }
-        setcookie("fm_root_atual", $fm_root_atual , 0 , "/");
+        setcookie("fm_root_atual", $fm_root_atual, 0, "/");
     } elseif (isset($set_fm_root_atual)) {
         if (!$islinux) $fm_root_atual = ucfirst($set_fm_root_atual);
-        setcookie("fm_root_atual", $fm_root_atual , 0 , "/");
+        setcookie("fm_root_atual", $fm_root_atual, 0, "/");
     }
     if (!isset($resolveIDs)){
-        setcookie("resolveIDs", 0 , $cookie_cache_time , "/");
+        setcookie("resolveIDs", 0, $cookie_cache_time, "/");
     } elseif (isset($set_resolveIDs)){
         $resolveIDs=($resolveIDs)?0:1;
-        setcookie("resolveIDs", $resolveIDs , $cookie_cache_time , "/");
+        setcookie("resolveIDs", $resolveIDs, $cookie_cache_time, "/");
     }
     if ($resolveIDs){
         exec("cat /etc/passwd",$mat_passwd);
         exec("cat /etc/group",$mat_group);
     }
-    $is_reachable = (stristr($dir_atual,$doc_root)==false);
+    $fm_color['Bg'] = "EEEEEE";
+    $fm_color['Text'] = "000000";
+    $fm_color['Link'] = "992929";
+    $fm_color['Mark'] = "A7D2E4";
+    $fm_color['Dir'] = "CCCCCC";
+    $fm_color['File'] = "EEEEEE";
+    $fm_color['FileFirstCell'] = "FFFFFF";
+    foreach($fm_color as $tag=>$color){
+        $fm_color[$tag]=strtolower($color);
+    }
 // +--------------------------------------------------
 // | File Manager Actions
 // +--------------------------------------------------
-if ($loggedon_pass==$auth_pass){
+if ($loggedon==$auth_pass){
     switch ($frame){
         case 1: break; // Empty Frame
         case 2: frame2(); break;
@@ -131,29 +141,31 @@ class config {
     var $data;
     var $filename;
     function config(){
-        global $_SERVER;
+        global $script_filename;
         $this->data = array(
             'lang'=>'en',
             'auth_pass'=>md5(''),
             'quota_mb'=>0,
-            'upload_filter'=>'',
+            'upload_ext_filter'=>array(),
+            'download_ext_filter'=>array(),
+            'error_reporting'=>'',
             'fm_root'=>'',
             'cookie_cache_time'=>time()+60*60*24*30, // 30 Dias
-            'version'=>'0.9.1'
+            'version'=>'0.9.2'
             );
         $data = false;
-        $this->filename = $_SERVER["SCRIPT_FILENAME"];
+        $this->filename = $script_filename;
         if (file_exists($this->filename)){
             $mat = file($this->filename);
             $objdata = trim(substr($mat[1],2));
-            if (strlen($objdata)>0) $data = unserialize($objdata);
+            if (strlen($objdata)) $data = unserialize($objdata);
         }
         if (is_array($data)&&count($data)==count($this->data)) $this->data = $data;
         else $this->save();
     }
     function save(){
         $objdata = "<?".chr(13).chr(10)."//".serialize($this->data).chr(13).chr(10);
-        if (strlen($objdata)>0){
+        if (strlen($objdata)){
             if (file_exists($this->filename)){
                 $mat = file($this->filename);
                 if ($fh = @fopen($this->filename, "w")){
@@ -178,6 +190,7 @@ function et($tag){
     $en['DocRoot'] = 'Document Root';
     $en['FLRoot'] = 'File Manager Root';
     $en['Name'] = 'Name';
+    $en['And'] = 'and';
     $en['Enter'] = 'Enter';
     $en['Send'] = 'Send';
     $en['Refresh'] = 'Refresh';
@@ -220,6 +233,7 @@ function et($tag){
     $en['Lang'] = 'Language';
     $en['File'] = 'File';
     $en['File_s'] = 'file(s)';
+    $en['Dir_s'] = 'directory(s)';
     $en['To'] = 'to';
     $en['Destination'] = 'Destination';
     $en['Configurations'] = 'Configurations';
@@ -233,6 +247,7 @@ function et($tag){
     $en['RemSel'] = 'DELETE selected itens';
     $en['NoDestDir'] = 'There is no selected destination directory';
     $en['DestEqOrig'] = 'Origin and destination directories are equal';
+    $en['InvalidDest'] = 'Destination directory is invalid';
     $en['NoNewPerm'] = 'New permission not set';
     $en['CopyTo'] = 'COPY to';
     $en['MoveTo'] = 'MOVE to';
@@ -253,7 +268,7 @@ function et($tag){
     $en['ConfSaved'] = 'Configurations saved';
     $en['PassSaved'] = 'Password saved';
     $en['FileDirExists'] = 'File or directory already exists';
-    $en['NoPhpinfo'] = 'PHPINFO() disabled';
+    $en['NoPhpinfo'] = 'Function phpinfo disabled';
     $en['NoReturn'] = 'no return';
     $en['FileSent'] = 'File sent';
     $en['SpaceLimReached'] = 'Space limit reached';
@@ -262,18 +277,28 @@ function et($tag){
     $en['FileOverw'] = 'File overwritten';
     $en['FileIgnored'] = 'File ignored';
     $en['ChkVer'] = 'Check sf.net for new version';
-    $en['ChkVerAvailable'] = 'New version, click to download!!';
+    $en['ChkVerAvailable'] = 'New version, click here to begin download!!';
     $en['ChkVerNotAvailable'] = 'No new version available. :(';
     $en['ChkVerError'] = 'Connection Error.';
     $en['Website'] = 'Website';
     $en['SendingForm'] = 'Sending files, please wait';
     $en['NoFileSel'] = 'No file selected';
+    $en['SelAll'] = 'All';
+    $en['SelNone'] = 'None';
+    $en['SelInverse'] = 'Inverse';
+    $en['Selected_s'] = 'selected';
+    $en['Total'] = 'total';
+    $en['Partition'] = 'Partition';
+    $en['RenderTime'] = 'Time to render this page';
+    $en['Seconds'] = 'sec';
+    $en['ErrorReport'] = 'Error Reporting';
 
     // Portuguese
     $pt['Version'] = 'Versão';
     $pt['DocRoot'] = 'Document Root';
     $pt['FLRoot'] = 'File Manager Root';
     $pt['Name'] = 'Nome';
+    $pt['And'] = 'e';
     $pt['Enter'] = 'Entrar';
     $pt['Send'] = 'Enviar';
     $pt['Refresh'] = 'Atualizar';
@@ -316,6 +341,7 @@ function et($tag){
     $pt['Lang'] = 'Idioma';
     $pt['File'] = 'Arquivo';
     $pt['File_s'] = 'arquivo(s)';
+    $pt['Dir_s'] = 'diretorio(s)';
     $pt['To'] = 'para';
     $pt['Destination'] = 'Destino';
     $pt['Configurations'] = 'Configurações';
@@ -329,6 +355,7 @@ function et($tag){
     $pt['RemSel'] = 'APAGAR itens selecionados';
     $pt['NoDestDir'] = 'Não há um diretório de destino selecionado';
     $pt['DestEqOrig'] = 'Diretório de origem e destino iguais';
+    $pt['InvalidDest'] = 'Diretório de destino inválido';
     $pt['NoNewPerm'] = 'Nova permissão não foi setada';
     $pt['CopyTo'] = 'COPIAR para';
     $pt['MoveTo'] = 'MOVER para';
@@ -349,7 +376,7 @@ function et($tag){
     $pt['ConfSaved'] = 'Configurações salvas';
     $pt['PassSaved'] = 'Senha salva';
     $pt['FileDirExists'] = 'Arquivo ou diretório já existe';
-    $pt['NoPhpinfo'] = 'PHPINFO() desabilitada';
+    $pt['NoPhpinfo'] = 'Função phpinfo desabilitada';
     $pt['NoReturn'] = 'sem retorno';
     $pt['FileSent'] = 'Arquivo enviado';
     $pt['SpaceLimReached'] = 'Limite de espaço alcançado';
@@ -358,14 +385,24 @@ function et($tag){
     $pt['FileOverw'] = 'Arquivo sobreescrito';
     $pt['FileIgnored'] = 'Arquivo omitido';
     $pt['ChkVer'] = 'Verificar sf.net por nova versão';
-    $pt['ChkVerAvailable'] = 'Nova versão, clique para download!!';
+    $pt['ChkVerAvailable'] = 'Nova versão, clique aqui para iniciar download!!';
     $pt['ChkVerNotAvailable'] = 'Não há nova versão disponível :(';
+    $pt['ChkVerError'] = 'Erro de conexão.';
     $pt['Website'] = 'Website';
     $pt['SendingForm'] = 'Enviando arquivos, aguarde';
     $pt['NoFileSel'] = 'Nenhum arquivo selecionado';
+    $pt['SelAll'] = 'Tudo';
+    $pt['SelNone'] = 'Nada';
+    $pt['SelInverse'] = 'Inverso';
+    $pt['Selected_s'] = 'selecionado(s)';
+    $pt['Total'] = 'total';
+    $pt['Partition'] = 'Partição';
+    $pt['RenderTime'] = 'Tempo para gerar esta página';
+    $pt['Seconds'] = 'seg';
+    $pt['ErrorReport'] = 'Error Reporting';
 
     $lang_ = $$lang;
-    if (isset($lang_[$tag])) return $lang_[$tag];
+    if (isset($lang_[$tag])) return htmlencode($lang_[$tag]);
     else return "undefined";
 }
 // +--------------------------------------------------
@@ -412,51 +449,57 @@ function total_copy($orig,$dest) {
  return $ok;
 }
 function total_move($orig,$dest) {
-    if (total_copy($orig,$dest)) total_delete($orig);
+    // Just why doesn't it has a MOVE alias?!
+    return rename((string)$orig,(string)$dest);
 }
 function download(){
-    global $dir_atual,$file_name;
-    $file = $dir_atual.$file_name;
+    global $dir_atual,$filename;
+    $file = $dir_atual.$filename;
     if(file_exists($file)){
-    //  && !eregi( "p?html?", $vFile ) && !eregi( "inc", $vFile ) && !eregi( "php3?", $vFile )
-        $size = filesize($file);
-        header("Content-Type: application/save");
-        header("Content-Length: $size");
-        header("Content-Disposition: attachment; filename=\"$file_name\"");
-        header("Content-Transfer-Encoding: binary");
-        if ($fh = fopen("$file", "rb")){
-            fpassthru($fh);
-            fclose($fh);
+        $is_proibido = false;
+        foreach($download_ext_filter as $key=>$ext){
+            if (eregi($ext,$filename)){
+                $is_proibido = true;
+                break;
+            }
+        }
+        if (!$is_proibido){
+            $size = filesize($file);
+            header("Content-Type: application/save");
+            header("Content-Length: $size");
+            header("Content-Disposition: attachment; filename=\"$filename\"");
+            header("Content-Transfer-Encoding: binary");
+            if ($fh = fopen("$file", "rb")){
+                fpassthru($fh);
+                fclose($fh);
+            } else alert(et('ReadDenied').": ".$file);
         } else alert(et('ReadDenied').": ".$file);
     } else alert(et('FileNotFound').": ".$file);
 }
 function execute(){
     global $cmd;
     header("Content-type: text/plain");
-    if (strlen($cmd)>0){
+    if (strlen($cmd)){
         echo "# ".$cmd."\n";
         exec($cmd,$mat);
-        if (count($mat)>0) echo trim(implode("\n",$mat));
+        if (count($mat)) echo trim(implode("\n",$mat));
         else echo "exec(\"$cmd\") ".et('NoReturn')."...";
     } else echo et('NoCmd');
 }
-function save_upload($temp_file,$file_name,$dir_dest) {
-    global $upload_filter;
-    $file_name = remove_acentos($file_name);
-    $file = $dir_dest.$file_name;
-    $file_size = filesize($temp_file);
+function save_upload($temp_file,$filename,$dir_dest) {
+    global $upload_ext_filter;
+    $filename = remove_acentos($filename);
+    $file = $dir_dest.$filename;
+    $filesize = filesize($temp_file);
     $is_proibido = false;
-    if (strlen($upload_filter)>0) {
-        $mat = explode("#",$upload_filter);
-        while(list($k,$v)=each($mat)){
-            if (strstr($file_name,$v)){
-                $is_proibido = true;
-                break;
-            }
+    foreach($upload_ext_filter as $key=>$ext){
+        if (eregi($ext,$filename)){
+            $is_proibido = true;
+            break;
         }
     }
     if (!$is_proibido){
-        if (!limite($file_size)){
+        if (!limite($filesize)){
             if (file_exists($file)){
                 if (unlink($file)){
                     if (copy($temp_file,$file)){
@@ -479,7 +522,7 @@ function zip_extract(){
   $zip = zip_open($dir_atual.$cmd_arg);
   if ($zip) {
     while ($zip_entry = zip_read($zip)) {
-        if (zip_entry_filesize($zip_entry) > 0) {
+        if (zip_entry_filesize($zip_entry)) {
             $complete_path = $path.dirname(zip_entry_name($zip_entry));
             $complete_name = $path.zip_entry_name($zip_entry);
             if(!file_exists($complete_path)) {
@@ -524,7 +567,7 @@ function htmldecode($str){
     } else return $str;
 }
 function rep($x,$y){
-  if ($x > 0) {
+  if ($x) {
     $aux = "";
     for ($a=1;$a<=$x;$a++) $aux .= $y;
     return $aux;
@@ -533,7 +576,7 @@ function rep($x,$y){
 function strzero($arg1,$arg2){
     if (strstr($arg1,"-") == false){
         $aux = intval($arg2) - strlen($arg1);
-        if ($aux > 0) return rep($aux,"0").$arg1;
+        if ($aux) return rep($aux,"0").$arg1;
         else return $arg1;
     } else {
         return "[$arg1]";
@@ -554,7 +597,7 @@ function remove_acentos($str){
     $str = str_replace("..","",str_replace("/","",str_replace("\\","",str_replace("\$","",$str))));
     return $str;
 }
-function formata_path($str){
+function formatpath($str){
     global $islinux;
     $str = trim($str);
     $str = str_replace("..","",str_replace("\\","/",str_replace("\$","",$str)));
@@ -565,7 +608,7 @@ function formata_path($str){
         else $str = $str2;
     }
     $tam = strlen($str);
-    if ($tam>0){
+    if ($tam){
         $last_char = $tam - 1;
         if ($str[$last_char] != "/") $str .= "/";
         if (!$islinux) $str = ucfirst($str);
@@ -608,23 +651,23 @@ function show_perms( $in_Perms ) {
    $sP .= (($in_Perms & 0x0004) ? 'r' : '&minus;') . (($in_Perms & 0x0002) ? 'w' : '&minus;') . (($in_Perms & 0x0001) ? (($in_Perms & 0x0200) ? 't' : 'x' ) : (($in_Perms & 0x0200) ? 'T' : '&minus;'));
    return $sP;
 }
-function formatsize ($arg) {
-    $j = 0;
-    $ext = array(" bytes"," Kb"," Mb"," Gb"," Tb");
-    while ($arg >= pow(1024,$j)) ++$j; {
-          $arg = round($arg / pow(1024,$j-1) * 100) / 100 . $ext[$j-1];
-    }
-    return $arg;
+function formatsize($arg) {
+    if ($arg>0){
+        $j = 0;
+        $ext = array(" bytes"," Kb"," Mb"," Gb"," Tb");
+        while ($arg >= pow(1024,$j)) ++$j;
+        return round($arg / pow(1024,$j-1) * 100) / 100 . $ext[$j-1];
+    } else return "0 Mb";
 }
-function getsize ($file) {
+function getsize($file) {
     return formatsize(filesize($file));
 }
-function limite($new_file_size=0) {
+function limite($new_filesize=0) {
     global $fm_root_atual;
     global $quota_mb;
     if($quota_mb){
         $total = total_size($fm_root_atual);
-        if (floor(($total+$new_file_size)/(1024*1024)) > $quota_mb) return true;
+        if (floor(($total+$new_filesize)/(1024*1024)) > $quota_mb) return true;
     }
     return false;
 }
@@ -654,14 +697,35 @@ function getgroup ($arg) {
 // | Interface
 // +--------------------------------------------------
 function html_header($plus=""){
+    global $fm_color;
 echo "
 <html>
 <head>
 <title>...:::: ".et('FileMan')."</title>
+<meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
 $plus
 </head>
-<script language=\"JavaScript\">
+<script language=\"Javascript\" type=\"text/javascript\">
 <!--
+    function Is(){
+        this.appname = navigator.appName;
+        this.appversion = navigator.appVersion;
+        this.platform = navigator.platform;
+        this.useragent = navigator.userAgent.toLowerCase();
+        this.ie = ( this.appname == 'Microsoft Internet Explorer' );
+        if (( this.useragent.indexOf( 'mac' ) != -1 ) || ( this.platform.indexOf( 'mac' ) != -1 )){
+            this.sisop = 'mac';
+        } else if (( this.useragent.indexOf( 'windows' ) != -1 ) || ( this.platform.indexOf( 'win32' ) != -1 )){
+            this.sisop = 'windows';
+        } else if (( this.useragent.indexOf( 'inux' ) != -1 ) || ( this.platform.indexOf( 'linux' ) != -1 )){
+            this.sisop = 'linux';
+        }
+    }
+    var is = new Is();
+    function enterSubmit(keypressEvent,submitFunc){
+        var kCode = (is.ie) ? keypressEvent.keyCode : keypressEvent.which
+        if( kCode == 13) eval(submitFunc);
+    }
     var W = screen.width;
     var H = screen.height;
     var FONTSIZE = 0;
@@ -687,44 +751,46 @@ echo replace_double(" ",str_replace(chr(13),"",str_replace(chr(10),"","
         font-family : Arial;
         font-size: '+FONTSIZE+'px;
         font-weight : normal;
-        color: 000000;
+        color: ".$fm_color['Text'].";
+        background-color: ".$fm_color['Bg'].";
     }
     table {
         font-family : Arial;
         font-size: '+FONTSIZE+'px;
         font-weight : normal;
-        color: 000000;
+        color: ".$fm_color['Text'].";
+        cursor: default;
     }
     input {
         font-family : Arial;
         font-size: '+FONTSIZE+'px;
         font-weight : normal;
-        color: 000000;
+        color: ".$fm_color['Text'].";
     }
     textarea {
         font-family : Courier;
         font-size: 12px;
         font-weight : normal;
-        color: 000000;
+        color: ".$fm_color['Text'].";
     }
     A {
         font-family : Arial;
         font-size : '+FONTSIZE+'px;
         font-weight : bold;
         text-decoration: none;
-        color: 992929;
+        color: ".$fm_color['Text'].";
     }
     A:link {
-        color: 000000;
+        color: ".$fm_color['Text'].";
     }
     A:visited {
-        color: 000000;
+        color: ".$fm_color['Text'].";
     }
     A:hover {
-        color: 992929;
+        color: ".$fm_color['Link'].";
     }
     A:active {
-        color: 000000;
+        color: ".$fm_color['Text'].";
     }
     </style>
     ');
@@ -734,19 +800,19 @@ echo "
 </script>
 ";
 }
-function reloadframe($ref,$arg){
-    global $dir_atual;
+function reloadframe($ref,$frame_number,$plus=""){
+    global $dir_atual,$path_info;
     echo "
-    <script language=\"Javascript\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
-        $ref.frame$arg.location.href='index.php?frame=$arg&dir_atual=$dir_atual';
+        ".$ref.".frame".$frame_number.".location.href='".$path_info["basename"]."?frame=".$frame_number."&dir_atual=".$dir_atual.$plus."';
     //-->
     </script>
     ";
 }
 function alert($arg){
     echo "
-    <script language=javascript>
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
         alert('$arg');
     //-->
@@ -755,7 +821,7 @@ function alert($arg){
 }
 function tree($dir_antes,$dir_corrente,$indice){
     global $fm_root_atual, $dir_atual, $islinux;
-    global $expanded_tree;
+    global $expanded_dir_list;
     $indice++;
     $num_dir = 0;
     $dir_name = str_replace($dir_antes,"",$dir_corrente);
@@ -780,30 +846,30 @@ function tree($dir_antes,$dir_corrente,$indice){
                     $mat_dir[] = $file;
             }
             closedir($handle);
-            if (count($mat_dir) > 0){
+            if (count($mat_dir)){
                 sort($mat_dir,SORT_STRING);
                 // Com Sub-dir
                 if ($indice != 0){
-                    for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-                    echo "&#149;";
+                    for ($aux=1;$aux<$indice;$aux++) echo "    ";
+                    echo "•";
                 }
                 if ($dir_antes != $dir_corrente){
-                    if (strstr($expanded_tree,":$dir_corrente/$dir_name")) $op_str = "[&#150;]";
+                    if (strstr($expanded_dir_list,":$dir_corrente/$dir_name")) $op_str = "[–]";
                     else $op_str = "[+]";
-                    echo "&nbsp;<a href=\"JavaScript:go_dir('$dir_corrente/$dir_name')\"><b>$op_str</b></a>&nbsp;<a href=\"JavaScript:go('$dir_corrente')\"><b>$dir_name</b></a><br>\n";
+                    echo " <a href=\"JavaScript:go_dir('$dir_corrente/$dir_name')\"><b>$op_str</b></a> <a href=\"JavaScript:go('$dir_corrente')\"><b>$dir_name</b></a><br>\n";
                 } else {
                     echo "<a href=\"JavaScript:go('$dir_corrente')\"><b>$fm_root_atual</b></a><br>\n";
                 }
                 for ($x=0;$x<count($mat_dir);$x++){
-                    if (($dir_antes == $dir_corrente)||(strstr($expanded_tree,":$dir_corrente/$dir_name"))){
+                    if (($dir_antes == $dir_corrente)||(strstr($expanded_dir_list,":$dir_corrente/$dir_name"))){
                         tree($dir_corrente."/",$dir_corrente."/".$mat_dir[$x],$indice);
                     } else flush();
                 }
             } else {
               // Sem Sub-dir
               if ($dir_antes != $dir_corrente){
-                for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-                echo "&#149;";
+                for ($aux=1;$aux<$indice;$aux++) echo "    ";
+                echo "•";
                 echo "<a href=\"JavaScript:go('$dir_corrente')\"> <b>$dir_name</b></a><br>\n";
               } else {
                 echo "<a href=\"JavaScript:go('$dir_corrente')\"> <b>$fm_root_atual</b></a><br>\n";
@@ -812,8 +878,8 @@ function tree($dir_antes,$dir_corrente,$indice){
         } else {
             // Negado
             if ($dir_antes != $dir_corrente){
-                for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-                echo "&#149;";
+                for ($aux=1;$aux<$indice;$aux++) echo "    ";
+                echo "•";
                 echo "<a href=\"JavaScript:go('$dir_corrente')\"><font color=red> <b>$dir_name</b></font></a><br>\n";
             } else {
                 echo "<a href=\"JavaScript:go('$dir_corrente')\"><font color=red> <b>$fm_root_atual</b></font></a><br>\n";
@@ -823,8 +889,8 @@ function tree($dir_antes,$dir_corrente,$indice){
     } else {
         // Proibido
         if ($dir_antes != $dir_corrente){
-            for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-            echo "&#149;";
+            for ($aux=1;$aux<$indice;$aux++) echo "    ";
+            echo "•";
             echo "<a href=\"JavaScript:go('$dir_corrente')\"><font color=red> <b>$dir_name</b></font></a><br>\n";
         } else {
             echo "<a href=\"JavaScript:go('$dir_corrente')\"><font color=red> <b>$fm_root_atual</b></font></a><br>\n";
@@ -832,40 +898,42 @@ function tree($dir_antes,$dir_corrente,$indice){
     }
 }
 function show_tree(){
-    global $fm_root_atual;
-    global $setflag;
-    global $islinux;
+    global $fm_root_atual,$path_info,$setflag,$islinux;
     html_header();
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">\n";
+    echo "<body marginwidth=\"0\" marginheight=\"0\">\n";
     echo "
-    <script language=\"Javascript\">
-    <!--";
-        if ($setflag) echo "
-        var flag = true;";
-        else echo "
-        var flag = false;";
-        echo "
+    <script language=\"Javascript\" type=\"text/javascript\">
+    <!--
+        // Disable text selection
+        function disableTextSelection(e){return false}
+        function enableTextSelection(){return true}
+        if (is.ie) document.onselectstart=new Function('return false')
+        else {
+            document.onmousedown=disableTextSelection
+            document.onclick=enableTextSelection
+        }
+        var flag = ".(($setflag)?"true":"false")."
         function set_flag(arg) {
             flag = arg;
         }
         function go_dir(arg) {
             var setflag;
             setflag = (flag)?1:0;
-            document.location.href='index.php?frame=2&setflag='+setflag+'&dir_atual=$dir_atual&open_dir='+arg;
+            document.location.href='".$path_info["basename"]."?frame=2&setflag='+setflag+'&dir_atual=$dir_atual&ec_dir='+arg;
         }
         function go(arg) {
             if (flag) {
                 parent.frame3.set_dir_dest(arg+'/');
                 flag = false;
             } else {
-                parent.frame3.location.href='index.php?frame=3&dir_atual='+arg+'/';
+                parent.frame3.location.href='".$path_info["basename"]."?frame=3&dir_atual='+arg+'/';
             }
         }
         function set_fm_root_atual(arg){
-            document.location.href='index.php?frame=2&set_fm_root_atual='+escape(arg);
+            document.location.href='".$path_info["basename"]."?frame=2&set_fm_root_atual='+escape(arg);
         }
         function atualizar(){
-            document.location.href='index.php?frame=2';
+            document.location.href='".$path_info["basename"]."?frame=2';
         }
     //-->
     </script>
@@ -891,7 +959,7 @@ function show_tree(){
             tree($aux,$aux,-1,0);
     echo "</td></tr>";
     echo "
-        <form name=\"login_form\" action=\"index.php\" method=\"post\" target=\"_parent\">
+        <form name=\"login_form\" action=\"".$path_info["basename"]."\" method=\"post\" target=\"_parent\">
         <input type=hidden name=action value=1>
         <tr>
         <td height=10 colspan=2><input type=submit value=\"".et('Leave')."\">
@@ -901,71 +969,72 @@ function show_tree(){
     echo "</table>\n";
     echo "</body>\n</html>";
 }
+function getmicrotime(){
+   list($usec, $sec) = explode(" ", microtime());
+   return ((float)$usec + (float)$sec);
+}
 function dir_list_form() {
-    global $fm_root_atual,$dir_atual,$quota_mb,$resolveIDs,$order_dir_list_by,$islinux,$cmd_name,$ip,$is_reachable;
+    global $fm_root_atual,$dir_atual,$quota_mb,$resolveIDs,$order_dir_list_by,$islinux,$cmd_name,$ip,$is_reachable,$path_info,$fm_color;
+    $ti = getmicrotime();
     clearstatcache();
+    $out = "<table border=0 cellspacing=1 cellpadding=4 width=\"100%\" bgcolor=\"#eeeeee\">\n";
     if ($opdir = @opendir($dir_atual)) {
-        $count = 0;
-        $total = 0;
-        $str_back = "";
-        $Arr = array();
-        echo "<table border=0 cellspacing=1 cellpadding=4 width=\"100%\" bgcolor=\"#eeeeee\">\n";
-        if ($dir_atual != $fm_root_atual){
-            $mat = explode("/",$dir_atual);
-            $dir_antes = "";
-            for($x=0;$x<(count($mat)-2);$x++) $dir_antes .= $mat[$x]."/";
-            $str_back = "<a href=\"index.php?frame=3&dir_atual=$dir_antes\"><<</a> ";
-        }
-        echo "
-            <form name=\"form_action\" action=\"index.php\" method=\"post\" onsubmit=\"return test_action();\">
-            <input type=hidden name=\"frame\" value=3>
-            <input type=hidden name=\"action\" value=0>
-            <input type=hidden name=\"dir_dest\" value=\"\">
-            <input type=hidden name=\"chmod_arg\" value=\"\">
-            <input type=hidden name=\"cmd_arg\" value=\"\">
-            <input type=hidden name=\"dir_atual\" value=\"$dir_atual\">
-            <input type=hidden name=\"dir_antes\" value=\"$dir_antes\">
-            <input type=hidden name=\"dir_dir_list\" value=\"\">
-            <input type=hidden name=\"dir_file_list\" value=\"\">";
-        echo "
-            <tr>
-            <td bgcolor=\"#dddddd\" colspan=20><nobr><input type=button onclick=\"config()\" value=\"".et('Config')."\"> <input type=button onclick=\"server_info()\" value=\"".et('ServerInfo')."\"> <input type=button onclick=\"test_prompt(1)\" value=\"".et('CreateDir')."\"> <input type=button onclick=\"test_prompt(2)\" value=\"".et('CreateArq')."\"> <input type=button onclick=\"execute()\" value=\"".et('ExecCmd')."\"> <input type=button onclick=\"upload()\" value=\"".et('Upload')."\"> <input type=button onclick=\"shell()\" value=\"".et('Shell')."\"> <b>$ip</b></nobr>";
+        $entry_count = 0;
+        $file_count = 0;
+        $dir_count = 0;
+        $total_size = 0;
+        $uplink = "";
+        $entry_list = array();
+        $highlight_cols = 0;
+
         while ($file = readdir($opdir)) {
           if (($file != ".")&&($file != "..")){
             if (is_file($dir_atual.$file)){
                 $ext = strtolower(strrchr($file,"."));
-                $Arr[$count]["type"] = "file";
-                // Função filetype() só retorna "file"...
-                $Arr[$count]["size"] = filesize($dir_atual.$file);
-                $Arr[$count]["sizet"] = getsize($dir_atual.$file);
+                $entry_list[$entry_count]["type"] = "file";
+                // Função filetype() returns only "file"...
+                $entry_list[$entry_count]["size"] = filesize($dir_atual.$file);
+                $entry_list[$entry_count]["sizet"] = getsize($dir_atual.$file);
                 if (strstr($ext,".")){
-                    $Arr[$count]["ext"] = $ext;
-                    $Arr[$count]["extt"] = $ext;
+                    $entry_list[$entry_count]["ext"] = $ext;
+                    $entry_list[$entry_count]["extt"] = $ext;
                 } else {
-                    $Arr[$count]["ext"] = "";
-                    $Arr[$count]["extt"] = "&nbsp;";
+                    $entry_list[$entry_count]["ext"] = "";
+                    $entry_list[$entry_count]["extt"] = " ";
                 }
+                $file_count++;
             } elseif (is_dir($dir_atual.$file)) {
-                $Arr[$count]["type"] = "dir";
+                // Recursive directory size disabled
+                // $entry_list[$entry_count]["size"] = total_size($dir_atual.$file);
+                $entry_list[$entry_count]["size"] = 0;
+                $entry_list[$entry_count]["sizet"] = 0;
+                $entry_list[$entry_count]["type"] = "dir";
+                $dir_count++;
             }
-            $Arr[$count]["name"] = $file;
-            $Arr[$count]["date"] = date("Ymd", filemtime($dir_atual.$file));
-            $Arr[$count]["time"] = date("his", filemtime($dir_atual.$file));
-            $Arr[$count]["datet"] = date("d/m/Y h:i:s", filemtime($dir_atual.$file));
+            $entry_list[$entry_count]["name"] = $file;
+            $entry_list[$entry_count]["date"] = date("Ymd", filemtime($dir_atual.$file));
+            $entry_list[$entry_count]["time"] = date("his", filemtime($dir_atual.$file));
+            $entry_list[$entry_count]["datet"] = date("d/m/Y h:i:s", filemtime($dir_atual.$file));
             if ($islinux && $resolveIDs){
-                $Arr[$count]["p"] = show_perms(fileperms($dir_atual.$file));
-                $Arr[$count]["u"] = getuser(fileowner($dir_atual.$file));
-                $Arr[$count]["g"] = getgroup(filegroup($dir_atual.$file));
+                $entry_list[$entry_count]["p"] = show_perms(fileperms($dir_atual.$file));
+                $entry_list[$entry_count]["u"] = getuser(fileowner($dir_atual.$file));
+                $entry_list[$entry_count]["g"] = getgroup(filegroup($dir_atual.$file));
             } else {
-                $Arr[$count]["p"] = base_convert(fileperms($dir_atual.$file),10,8);
-                $Arr[$count]["p"] = substr($Arr[$count]["p"],strlen($Arr[$count]["p"])-3);
-                $Arr[$count]["u"] = fileowner($dir_atual.$file);
-                $Arr[$count]["g"] = filegroup($dir_atual.$file);
+                $entry_list[$entry_count]["p"] = base_convert(fileperms($dir_atual.$file),10,8);
+                $entry_list[$entry_count]["p"] = substr($entry_list[$entry_count]["p"],strlen($entry_list[$entry_count]["p"])-3);
+                $entry_list[$entry_count]["u"] = fileowner($dir_atual.$file);
+                $entry_list[$entry_count]["g"] = filegroup($dir_atual.$file);
             }
-            $count++;
+            $total_size += $entry_list[$entry_count]["size"];
+            $entry_count++;
           }
         }
-        if($count){
+        closedir($opdir);
+
+        if ($file_count) $highlight_cols = ($islinux)?7:5;
+        else $highlight_cols = ($islinux)?6:4;
+
+        if($entry_count){
             $or1="1A";
             $or2="2D";
             $or3="3A";
@@ -974,433 +1043,610 @@ function dir_list_form() {
             $or6="6D";
             $or7="7D";
             switch($order_dir_list_by){
-                case "1A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or1="1D"; break;
-                case "1D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_DESC); $or1="1A"; break;
-                case "2A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"p",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC); $or2="2D"; break;
-                case "2D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"p",SORT_STRING,SORT_DESC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC); $or2="2A"; break;
-                case "3A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC); $or3="3D"; break;
-                case "3D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_DESC,"g",SORT_STRING,SORT_ASC); $or3="3A"; break;
-                case "4A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_DESC); $or4="4D"; break;
-                case "4D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_DESC,"u",SORT_STRING,SORT_DESC); $or4="4A"; break;
-                case "5A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"size",SORT_NUMERIC,SORT_ASC); $or5="5D"; break;
-                case "5D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"size",SORT_NUMERIC,SORT_DESC); $or5="5A"; break;
-                case "6A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"date",SORT_STRING,SORT_ASC,"time",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or6="6D"; break;
-                case "6D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"date",SORT_STRING,SORT_DESC,"time",SORT_STRING,SORT_DESC,"name",SORT_STRING,SORT_ASC); $or6="6A"; break;
-                case "7A": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"ext",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or7="7D"; break;
-                case "7D": $Arr = array_csort ($Arr,"type",SORT_STRING,SORT_ASC,"ext",SORT_STRING,SORT_DESC,"name",SORT_STRING,SORT_ASC); $or7="7A"; break;
+                case "1A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or1="1D"; break;
+                case "1D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_DESC); $or1="1A"; break;
+                case "2A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"p",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC); $or2="2D"; break;
+                case "2D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"p",SORT_STRING,SORT_DESC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC); $or2="2A"; break;
+                case "3A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC); $or3="3D"; break;
+                case "3D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_DESC,"g",SORT_STRING,SORT_ASC); $or3="3A"; break;
+                case "4A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_ASC,"u",SORT_STRING,SORT_DESC); $or4="4D"; break;
+                case "4D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"g",SORT_STRING,SORT_DESC,"u",SORT_STRING,SORT_DESC); $or4="4A"; break;
+                case "5A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"size",SORT_NUMERIC,SORT_ASC); $or5="5D"; break;
+                case "5D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"size",SORT_NUMERIC,SORT_DESC); $or5="5A"; break;
+                case "6A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"date",SORT_STRING,SORT_ASC,"time",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or6="6D"; break;
+                case "6D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"date",SORT_STRING,SORT_DESC,"time",SORT_STRING,SORT_DESC,"name",SORT_STRING,SORT_ASC); $or6="6A"; break;
+                case "7A": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"ext",SORT_STRING,SORT_ASC,"name",SORT_STRING,SORT_ASC); $or7="7D"; break;
+                case "7D": $entry_list = array_csort ($entry_list,"type",SORT_STRING,SORT_ASC,"ext",SORT_STRING,SORT_DESC,"name",SORT_STRING,SORT_ASC); $or7="7A"; break;
             }
-            echo "<tr>
-                      <td bgcolor=\"#dddddd\" colspan=20><nobr>$str_back <a href=\"index.php?frame=3&dir_atual=$dir_atual\">$dir_atual</a></nobr>";
-            $dir_out="";
-            $file_out="";
-            for (reset($Arr); $Arr2 = current($Arr); next($Arr)) {
-                 $file = $Arr2["name"];
-                 if ($Arr2["type"]=="dir"){
-                     $count--;
-                     $dir_out .= "<tr onmouseover=\"select_item(this, '', 'dir', 'over');\" onmouseout=\"select_item(this, '', 'dir', 'out');\" onmousedown=\"select_item(this, '$file', 'dir', 'click');\">
-                                 <td align=left bgcolor=\"#cccccc\"><nobr><a href=\"JavaScript:go('$file')\">$file</a></nobr>
-                                 <td bgcolor=\"#cccccc\">".$Arr2["p"];
-                     if ($islinux) $dir_out .= "<td bgcolor=\"#cccccc\">".$Arr2["u"]."<td bgcolor=\"#cccccc\">".$Arr2["g"];
-                     $dir_out .= "
-                                 (-#-)
-                                 <td bgcolor=\"#cccccc\">".$Arr2["datet"]."
-                                 (-#-)";
-                     // Opções de diretório
-                     if ( is_writable($dir_atual.$file) ) $dir_out .= "
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:if(confirm('".et('ConfRem')." \\'".$file."\\' ?')) document.location.href='index.php?frame=3&action=8&cmd_arg=".$file."&dir_atual=$dir_atual'\">".et('Rem')."</a>
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:rename('$file')\">".et('Ren')."</a>";
-                     $dir_out .= "
-                                 </tr>";
-                 } else {
-                     $file_out .= "<tr onmouseover=\"select_item(this, '', 'file', 'over');\" onmouseout=\"select_item(this, '', 'file', 'out');\" onmousedown=\"select_item(this, '$file', 'file', 'click');\">
-                                 <td align=left bgcolor=\"#ffffff\"><nobr><a href=\"JavaScript:download('$file')\">$file</a></nobr>
-                                 <td bgcolor=\"#eeeeee\">".$Arr2["p"];
-                     if ($islinux) $file_out .= "<td>".$Arr2["u"]."<td>".$Arr2["g"];
-                     $file_out .= "
-                                 <td bgcolor=\"#eeeeee\">".$Arr2["sizet"]."
-                                 <td bgcolor=\"#eeeeee\">".$Arr2["datet"]."
-                                 <td bgcolor=\"#eeeeee\">".$Arr2["extt"];
-                     // Opções de arquivo
-                     if ( is_writable($dir_atual.$file) ) $file_out .= "
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".$file."\\' ?')) document.location.href='index.php?frame=3&action=8&cmd_arg=".$file."&dir_atual=$dir_atual'\">".et('Rem')."</a>
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:rename('$file')\">".et('Ren')."</a>";
-                     if ( is_readable($dir_atual.$file) ) $file_out .= "
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:edit_file('$file')\">".et('Edit')."</a>";
-                     if ( is_readable($dir_atual.$file) && (($Arr2["ext"] == ".tar") || ($Arr2["ext"] == ".zip") || ($Arr2["ext"] == ".bz2") || ($Arr2["ext"] == ".tbz2") || ($Arr2["ext"] == ".bz") || ($Arr2["ext"] == ".tbz") || ($Arr2["ext"] == ".bzip") || ($Arr2["ext"] == ".gzip") || ($Arr2["ext"] == ".gz") || ($Arr2["ext"] == ".tgz")) ) $file_out .= "
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:decompress('$file')\">".et('Decompress')."</a>";
-                     if ($is_reachable){
-                         if( is_readable($dir_atual.$file) && (($Arr2["ext"] == ".php") || ($Arr2["ext"] == ".php3") || ($Arr2["ext"] == ".asp") || ($Arr2["ext"] == ".html") || ($Arr2["ext"] == ".htm") || ($Arr2["ext"] == ".jpg") || ($Arr2["ext"] == ".gif") || ($Arr2["ext"] == ".png") || ($Arr2["ext"] == ".bmp")) ) $file_out .= "
-                                 <td bgcolor=\"#ffffff\" align=center><a href=\"javascript:view('$file');\">".et('View')."</a>";
-                     }
-                     $file_out .= "</tr>";
-                     $total += filesize($dir_atual.$file);
-                 }
-            }
-            if (strlen($file_out)>0) {
-                $dir_out = str_replace("(-#-)","<td bgcolor=\"#cccccc\" align=center>&nbsp;",$dir_out);
-                if ($islinux) $highlight_cols = 7;
-                else $highlight_cols = 5;
-            } else {
-                $dir_out = str_replace("(-#-)","",$dir_out);
-                if ($islinux) $highlight_cols = 5;
-                else $highlight_cols = 3;
-            }
-            echo "
-                <tr>
-                <td bgcolor=\"#dddddd\" colspan=20><nobr>
-                      <input type=\"button\" style=\"width:60\" onclick=\"test(4)\" value=\"".et('Rem')."\">
-                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
-                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(6)\" value=\"".et('Move')."\">
-                      <input type=\"button\" style=\"width:100\" onclick=\"test_prompt(71)\" value=\"".et('Compress')."\">";
-            if ($islinux) echo "
-                      <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
-            echo "
-                      <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
-            echo "
-                </nobr>";
-            if (strlen($dir_out)>0) echo $dir_out;
-            if (strlen($file_out)>0){
-                echo "
-                <tr>
-                      <td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or1&dir_atual=$dir_atual\">".et('Name')."</a>
-                      <td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or2&dir_atual=$dir_atual\">".et('Perms')."</a>";
-                if ($islinux) echo "<td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or3&dir_atual=$dir_atual\">".et('Owner')."</a><td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or4&dir_atual=$dir_atual\">".et('Group')."</a>";
-                echo "
-                      <td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or5&dir_atual=$dir_atual\">".et('Size')."</a>
-                      <td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or6&dir_atual=$dir_atual\">".et('Date')."</a>
-                      <td bgcolor=\"#dddddd\"><a href=\"index.php?frame=3&or_by=$or7&dir_atual=$dir_atual\">".et('Type')."</a>
-                      <td bgcolor=\"#dddddd\" colspan=20>&nbsp;
-                ";
-                echo $file_out;
-            }
-            echo "
-                <tr>
-                <td bgcolor=\"#dddddd\" colspan=20><nobr>
-                      <input type=\"button\" style=\"width:60\" onclick=\"test(4)\" value=\"".et('Rem')."\">
-                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
-                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(6)\" value=\"".et('Move')."\">
-                      <input type=\"button\" style=\"width:100\" onclick=\"test_prompt(71)\" value=\"".et('Compress')."\">";
-            if ($islinux) echo "
-                      <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
-            echo "
-                      <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
-            echo "
-                </nobr>";
-            echo "</form>";
-            closedir($opdir);
-            if ($quota_mb) $quota_str = "(".formatsize(($quota_mb*1024*1024)-total_size($fm_root_atual))." ".et('Free').")";
-            echo "</table><table bgcolor=\"#dddddd\" width=\"100%\" border=0 cellspacing=1 cellpadding=5>";
-            if ($count) echo "<tr><td colspan=7>$count ".et('File_s')." = ".formatsize($total)."$quota_str</tr>";
-            else echo "<tr><td colspan=7>0 ".et('File_s')." = 0 Mb</tr>";
-        } else {
-            echo "
-                    <tr>
-                    <td bgcolor=\"#dddddd\" width=\"1%\">$str_back<td bgcolor=\"#dddddd\" colspan=20><nobr><a href=\"index.php?frame=3&dir_atual=$dir_atual\">$dir_atual</a></nobr>
-                    <tr><td bgcolor=\"#dddddd\" colspan=20>".et('EmptyDir').".</tr>";
         }
-        echo "</table>";
-        echo "
-            <script language=\"Javascript\">
-            <!--
-            function getCookieVal (offset) {
-                var endstr = document.cookie.indexOf (';', offset);
-                if (endstr == -1) endstr = document.cookie.length;
-                return unescape(document.cookie.substring(offset, endstr));
+        $out .= "
+        <script language=\"Javascript\" type=\"text/javascript\">
+        <!--
+        function getCookieVal (offset) {
+            var endstr = document.cookie.indexOf (';', offset);
+            if (endstr == -1) endstr = document.cookie.length;
+            return unescape(document.cookie.substring(offset, endstr));
+        }
+        function getCookie (name) {
+            var arg = name + '=';
+            var alen = arg.length;
+            var clen = document.cookie.length;
+            var i = 0;
+            while (i < clen) {
+                var j = i + alen;
+                if (document.cookie.substring(i, j) == arg) return getCookieVal (j);
+                i = document.cookie.indexOf(' ', i) + 1;
+                if (i == 0) break;
             }
-            function getCookie (name) {
-                var arg = name + '=';
-                var alen = arg.length;
-                var clen = document.cookie.length;
-                var i = 0;
-                while (i < clen) {
-                    var j = i + alen;
-                    if (document.cookie.substring(i, j) == arg) return getCookieVal (j);
-                    i = document.cookie.indexOf(' ', i) + 1;
-                    if (i == 0) break;
-                }
-                return null;
-            }
-            function setCookie (name, value) {
-                var argv = SetCookie.arguments;
-                var argc = SetCookie.arguments.length;
-                var expires = (argc > 2) ? argv[2] : null;
-                var path = (argc > 3) ? argv[3] : null;
-                var domain = (argc > 4) ? argv[4] : null;
-                var secure = (argc > 5) ? argv[5] : false;
-                document.cookie = name + '=' + escape (value) +
-                ((expires == null) ? '' : ('; expires=' + expires.toGMTString())) +
-                ((path == null) ? '' : ('; path=' + path)) +
-                ((domain == null) ? '' : ('; domain=' + domain)) +
-                ((secure == true) ? '; secure' : '');
-            }
-            function delCookie (name) {
-                var exp = new Date();
-                exp.setTime (exp.getTime() - 1);
-                var cval = GetCookie (name);
-                document.cookie = name + '=' + cval + '; expires=' + exp.toGMTString();
-            }
-            function go(arg) {
-                document.location.href='index.php?frame=3&dir_atual=$dir_atual'+arg+'/';
-            }
-            function resolveIDs() {
-                document.location.href='index.php?frame=3&set_resolveIDs=1&dir_atual=$dir_atual';
-            }
-            var dir_dir_list = new Array();
-            var dir_file_list = new Array();
-            function select_item(Row, Entry, Type, Action){
-                if (Type == 'dir'){
-                    var DefaultColor = '#cccccc';
-                } else {
-                    var DefaultColor = '#eeeeee';
-                }
-                var PointerColor = '#9FDCD3';
-                var MarkColor = '#A7D2E4';
-                var Cells = null;
-                if (typeof(document.getElementsByTagName) != 'undefined') {
-                    Cells = Row.getElementsByTagName('td');
-                }else if (typeof(Row.cells) != 'undefined') {
-                    Cells = Row.cells;
-                }else {
-                    return false;
-                }
-                var domDetect    = null;
-                var currentColor = null;
-                var newColor     = null;
-                if (typeof(window.opera) == 'undefined' && typeof(Cells[0].getAttribute) != 'undefined') {
-                    currentColor = Cells[0].getAttribute('bgcolor');
-                    domDetect    = true;
-                } else {
-                    currentColor = Cells[0].style.backgroundColor;
-                    domDetect    = false;
-                }
-                if (Action == 'over' && currentColor.toLowerCase() != MarkColor.toLowerCase()) {
-                    newColor = PointerColor;
-                } else if (Action == 'out' && currentColor.toLowerCase() != MarkColor.toLowerCase()) {
-                    newColor = DefaultColor;
-                } else if (Action == 'click') {
-                    newColor = (currentColor.toLowerCase() == MarkColor.toLowerCase()) ? PointerColor : MarkColor;
-                    select_unselect(Entry, Type);
-                }
-                if (newColor) {
-                    if (domDetect) {
-                        for (var c=0; c < $highlight_cols; c++) {
-                            if (Type=='file' && c==0 && Action == 'out' && currentColor.toLowerCase() != MarkColor.toLowerCase()) Cells[c].setAttribute('bgcolor', '#ffffff', 0);
-                            else Cells[c].setAttribute('bgcolor', newColor, 0);
+            return null;
+        }
+        function setCookie (name, value) {
+            var argv = SetCookie.arguments;
+            var argc = SetCookie.arguments.length;
+            var expires = (argc > 2) ? argv[2] : null;
+            var path = (argc > 3) ? argv[3] : null;
+            var domain = (argc > 4) ? argv[4] : null;
+            var secure = (argc > 5) ? argv[5] : false;
+            document.cookie = name + '=' + escape (value) +
+            ((expires == null) ? '' : ('; expires=' + expires.toGMTString())) +
+            ((path == null) ? '' : ('; path=' + path)) +
+            ((domain == null) ? '' : ('; domain=' + domain)) +
+            ((secure == true) ? '; secure' : '');
+        }
+        function delCookie (name) {
+            var exp = new Date();
+            exp.setTime (exp.getTime() - 1);
+            var cval = GetCookie (name);
+            document.cookie = name + '=' + cval + '; expires=' + exp.toGMTString();
+        }
+        function go(arg) {
+            document.location.href='".$path_info["basename"]."?frame=3&dir_atual=$dir_atual'+arg+'/';
+        }
+        function resolveIDs() {
+            document.location.href='".$path_info["basename"]."?frame=3&set_resolveIDs=1&dir_atual=$dir_atual';
+        }
+        var entry_list = new Array();
+        // Custom object constructor
+        function entry(name, type, size, selected){
+            this.name = name;
+            this.type = type;
+            this.size = size;
+            this.selected = false;
+        }
+        // Declare entry_list for selection procedures";
+        foreach ($entry_list as $i=>$data){
+            $out .= "\nentry_list['entry$i'] = new entry('".$data["name"]."', '".$data["type"]."', ".$data["size"].", false);";
+        }
+        $out .= "
+        // Select/Unselect Rows OnClick/OnMouseOver
+        var lastRows = new Array(0,0);
+        function selectEntry(Row, Action){
+            var MarkColor = '#".$fm_color['Mark']."';
+            var Cells = Row.getElementsByTagName('td');
+            if (multipleSelection){
+                // Avoid repeated onmouseover events from same Row ( cell transition )
+                if (Row != lastRows[0]){
+                    if (Action == 'over') {
+                        if (entry_list[Row.id].selected){
+                            if (entry_list[Row.id].type == 'dir') DefaultColor = '#".$fm_color['Dir']."';
+                            else DefaultColor = '#".$fm_color['File']."';
+                            if (unselect(entry_list[Row.id])) {
+                                for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                    if (c == 0 && entry_list[Row.id].type=='file' && !entry_list[Row.id].selected) Cells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                    else Cells[c].style.backgroundColor = DefaultColor;
+                                }
+                            }
+                            // Change the last Row when you change the movement orientation
+                            var LastRowID = lastRows[0].id;
+                            var LastRowDefaultColor;
+                            if (entry_list[LastRowID].type == 'dir') LastRowDefaultColor = '#".$fm_color['Dir']."';
+                            else LastRowDefaultColor = '#".$fm_color['File']."';
+                            if (Row.id == lastRows[1].id){
+                                var LastRowCells = lastRows[0].getElementsByTagName('td');
+                                if (unselect(entry_list[LastRowID])) {
+                                    for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                        if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                        else LastRowCells[c].style.backgroundColor = LastRowDefaultColor;
+                                    }
+                                }
+                            }
+                        } else {
+                            if (select(entry_list[Row.id])){
+                                for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                    if (c == 0 && entry_list[Row.id].type=='file' && !entry_list[Row.id].selected) Cells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                    else Cells[c].style.backgroundColor = MarkColor;
+                                }
+                            }
+                            // Change the last Row when you change the movement orientation
+                            var LastRowID = lastRows[0].id;
+                            if (Row.id == lastRows[1].id){
+                                var LastRowCells = lastRows[0].getElementsByTagName('td');
+                                if (select(entry_list[LastRowID])) {
+                                    for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                        if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                        else LastRowCells[c].style.backgroundColor = MarkColor;
+                                    }
+                                }
+                            }
                         }
+                        lastRows[1] = lastRows[0];
+                        lastRows[0] = Row;
+                    }
+                }
+            } else {
+                if (Action == 'click') {
+                    var newColor = null;
+                    if (entry_list[Row.id].selected){
+                        var DefaultColor;
+                        if (entry_list[Row.id].type == 'dir') DefaultColor = '#".$fm_color['Dir']."';
+                        else DefaultColor = '#".$fm_color['File']."';
+                        if (unselect(entry_list[Row.id])) newColor = DefaultColor;
                     } else {
-                        for (var c=0; c < $highlight_cols; c++) {
-                            if (Type=='file' && c==0 && Action == 'out' && currentColor.toLowerCase() != MarkColor.toLowerCase()) Cells[c].style.backgroundColor = '#ffffff';
+                        if (select(entry_list[Row.id])) newColor = MarkColor;
+                    }
+                    if (newColor) {
+                        lastRows[0] = lastRows[1] = Row;
+                        for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                            if (c == 0 && entry_list[Row.id].type=='file' && !entry_list[Row.id].selected) Cells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
                             else Cells[c].style.backgroundColor = newColor;
                         }
                     }
                 }
-                return true;
             }
-            function select_unselect(Entry, Type){
-                if (Type == 'dir') select_unselect_dir(Entry);
-                else select_unselect_file(Entry);
+            return true;
+        }
+        // Disable text selection and bind multiple selection flag
+        var multipleSelection = false;
+        if (is.ie) {
+            document.onselectstart=new Function('return false');
+            document.onmousedown=switch_flag_on;
+            document.onmouseup=switch_flag_off;
+            // Event mouseup is not generated over scrollbar.. curiously, mousedown is.. go figure.
+            window.onscroll=new Function('multipleSelection=false');
+        } else {
+            if (document.layers) window.captureEvents(Event.MOUSEDOWN);
+            if (document.layers) window.captureEvents(Event.MOUSEUP);
+            window.onmousedown=switch_flag_on;
+            window.onmouseup=switch_flag_off;
+        }
+        // Using same function and a ternary operator couses bug on double click
+        function switch_flag_on(e) {
+            lastRows[0] = lastRows[1] = 0;
+            if (is.ie){
+                multipleSelection = (event.button == 1);
+            } else {
+                multipleSelection = (e.which == 1);
             }
-            function select_unselect_dir(Entry){
-                var tam = dir_dir_list.length;
-                var mat = new Array();
-                var was_set = false;
-                for (var x=0;x<tam;x++){
-                    if (dir_dir_list[x] == Entry){
-                        was_set = true;
-                    } else {
-                        mat.push(dir_dir_list[x]);
-                    }
+            return false;
+        }
+        function switch_flag_off(e) {
+            if (is.ie){
+                multipleSelection = (event.button != 1);
+            } else {
+                multipleSelection = (e.which != 1);
+            }
+            return false;
+        }
+        var total_dirs_selected = 0;
+        var total_files_selected = 0;
+        function unselect(Entry){
+            if (!Entry.selected) return false;
+            Entry.selected = false;
+            sel_totalsize -= Entry.size;
+            if (Entry.type == 'dir') total_dirs_selected--;
+            else total_files_selected--;
+            update_sel_status();
+            return true;
+        }
+        function select(Entry){
+            if(Entry.selected) return false;
+            Entry.selected = true;
+            sel_totalsize += Entry.size;
+            if(Entry.type == 'dir') total_dirs_selected++;
+            else total_files_selected++;
+            update_sel_status();
+            return true;
+        }
+        function is_anything_selected(){
+            var selected_dir_list = new Array();
+            var selected_file_list = new Array();
+            for(var x=0;x<".(integer)count($entry_list).";x++){
+                if(entry_list['entry'+x].selected){
+                    if(entry_list['entry'+x].type == 'dir') selected_dir_list.push(entry_list['entry'+x].name);
+                    else selected_file_list.push(entry_list['entry'+x].name);
                 }
-                if (!was_set){
-                    dir_dir_list.push(Entry);
-                    return true;
+            }
+            document.form_action.selected_dir_list.value = selected_dir_list.join('<|*|>');
+            document.form_action.selected_file_list.value = selected_file_list.join('<|*|>');
+            return (total_dirs_selected>0 || total_files_selected>0);
+        }
+        function formatsize (arg) {
+            var resul = '';
+            if (arg>0){
+                var j = 0;
+                var ext = new Array(' bytes',' Kb',' Mb',' Gb',' Tb');
+                while (arg >= Math.pow(1024,j)) ++j;
+                resul = (Math.round(arg/Math.pow(1024,j-1)*100)/100) + ext[j-1];
+            } else resul = '0 Mb';
+            return resul;
+        }
+        var sel_totalsize = 0;
+        function update_sel_status(){
+            var t = total_dirs_selected+' ".et('Dir_s')." ".et('And')." '+total_files_selected+' ".et('File_s')." ".et('Selected_s')." = '+formatsize(sel_totalsize);
+            document.getElementById(\"sel_status\").innerHTML = t;
+        }
+        // Select all/none/inverse
+        function selectANI(Butt){
+            var MarkColor = '#".$fm_color['Mark']."';
+            for(var x=0;x<". (integer)count($entry_list).";x++){
+                if (entry_list['entry'+x].type == 'dir'){
+                    var DefaultColor = '#".$fm_color['Dir']."';
                 } else {
-                    dir_dir_list = mat;
-                    return false;
+                    var DefaultColor = '#".$fm_color['File']."';
                 }
-            }
-            function select_unselect_file(Entry){
-                var tam = dir_file_list.length;
-                var mat = new Array();
-                var was_set = false;
-                for (var x=0;x<tam;x++){
-                    if (dir_file_list[x] == Entry){
-                        was_set = true;
-                    } else {
-                        mat.push(dir_file_list[x]);
-                    }
-                }
-                if (!was_set){
-                    dir_file_list.push(Entry);
-                    return true;
-                } else {
-                    dir_file_list = mat;
-                    return false;
-                }
-            }
-            function is_anything_selected(){
-                document.form_action.dir_dir_list.value = dir_dir_list.join('<|*|>');
-                document.form_action.dir_file_list.value = dir_file_list.join('<|*|>');
-                if (dir_dir_list.length>0 || dir_file_list.length>0) return true;
-                else return false;
-            }
-            function download(arg){
-                    parent.frame1.location.href='index.php?action=3&dir_atual=$dir_atual&file_name='+escape(arg);
-            }
-            function upload(){
-                    var w = 400;
-                    var h = 200;
-                    window.open('index.php?action=10&dir_atual=$dir_atual', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-            }
-            function execute(){
-                    document.form_action.cmd_arg.value = prompt('".et('TypeCmd').".');
-                    if(document.form_action.cmd_arg.value.length>0){
-                        if(confirm('".et('ConfExec')." \\' '+document.form_action.cmd_arg.value+' \\' ?')) {
-                            var w = 800;
-                            var h = 600;
-                            window.open('index.php?action=6&dir_atual=$dir_atual&cmd='+escape(document.form_action.cmd_arg.value), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+                var Row = document.getElementById('entry'+x);
+                var Cells = Row.getElementsByTagName('td');
+                var newColor = null;
+                switch (Butt.value){
+                    case '".et('SelAll')."':
+                        if (select(entry_list[Row.id])) newColor = MarkColor;
+                    break;
+                    case '".et('SelNone')."':
+                        if (unselect(entry_list[Row.id])) newColor = DefaultColor;
+                    break;
+                    case '".et('SelInverse')."':
+                        if (entry_list[Row.id].selected){
+                            if (unselect(entry_list[Row.id])) newColor = DefaultColor;
+                        } else {
+                            if (select(entry_list[Row.id])) newColor = MarkColor;
                         }
+                    break;
+                }
+                if (newColor) {
+                    for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                        if (entry_list[Row.id].type=='file' && c==0 && !entry_list[Row.id].selected) Cells[c].style.backgroundColor = '#". $fm_color['FileFirstCell']."';
+                        else Cells[c].style.backgroundColor = newColor;
                     }
-            }
-            function decompress(arg){
-                    if(confirm('".strtoupper(et('Decompress'))." \\' '+arg+' \\' ?')) {
-                        document.form_action.action.value = 72;
-                        document.form_action.cmd_arg.value = arg;
-                        document.form_action.submit();
-                    }
-            }
-            function edit_file(arg){
-                    var w = 800;
-                    var h = 600;
-                    if(confirm('".strtoupper(et('Edit'))." \\' '+arg+' \\' ?')) window.open('index.php?action=7&dir_atual=$dir_atual&file_name='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-            }
-            function config(){
-                    var w = 600;
-                    var h = 350;
-                    window.open('index.php?action=2', 'win_config', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-            }
-            function server_info(arg){
-                    var w = 800;
-                    var h = 600;
-                    window.open('index.php?action=5', 'win_serverinfo', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-            }
-            function shell(){
-                    var w = 800;
-                    var h = 600;
-                    window.open('index.php?action=9', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-            }
-            function view(arg){
-                    var w = 800;
-                    var h = 600;
-                    if(confirm('".strtoupper(et('View'))." \\' '+arg+' \\' ?')) window.open('index.php?action=4&dir_atual=$dir_atual&file_name='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes');
-            }
-            function rename(arg){
-                    var nome = '';
-                    if (nome = prompt('".strtoupper(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...')) document.location.href='index.php?frame=3&action=3&dir_atual=$dir_atual&old_name='+escape(arg)+'&new_name='+escape(nome);
-            }
-            function set_dir_dest(arg){
-                document.form_action.dir_dest.value=arg;
-                if (document.form_action.action.value.length > 0) test(document.form_action.action.value);
-                else alert('".et('JSError').".');
-            }
-            function sel_dir(arg){
-                document.form_action.action.value = arg;
-                document.form_action.dir_dest.value='';
-                if (!is_anything_selected()) alert('".et('NoSel').".');
-                else {
-                    if (!getCookie('sel_dir_warn')) {
-                        alert('".et('SelDir').".');
-                        document.cookie='sel_dir_warn'+'='+escape('true')+';';
-                    }
-                    parent.frame2.set_flag(true);
                 }
             }
-            function set_chmod_arg(arg){
-                document.form_action.chmod_arg.value=arg;
-                if (document.form_action.action.value.length > 0) test(document.form_action.action.value);
-                else alert('".et('JSError')."');
+            if (Butt.value == '".et('SelAll')."'){
+                Butt.value = '".et('SelNone')."';
+            } else if (Butt.value == '".et('SelNone')."'){
+                Butt.value = '".et('SelAll')."';
             }
-            function chmod(arg){
-                document.form_action.action.value = arg;
-                document.form_action.dir_dest.value='';
-                document.form_action.chmod_arg.value='';
-                if (!is_anything_selected()) alert('".et('NoSel').".');
-                else {
-                    var w = 280;
-                    var h = 180;
-                    window.open('index.php?action=8', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
-                }
-            }
-            function test_action(){
-                if (document.form_action.action.value != 0) return true;
-                else return false;
-            }
-            function test_prompt(arg){
-                    var erro='';
-                    var conf='';
-                    if (arg == 1){
-                        document.form_action.cmd_arg.value = prompt('".et('TypeDir').".');
-                    } else if (arg == 2){
-                        document.form_action.cmd_arg.value = prompt('".et('TypeArq').".');
-                    } else if (arg == 71){
-                        if (!is_anything_selected()) erro = '".et('NoSel').".';
-                        else document.form_action.cmd_arg.value = prompt('".et('TypeArqComp')."');
+            return true;
+        }
+        function download(arg){
+                parent.frame1.location.href='".$path_info["basename"]."?action=3&dir_atual=$dir_atual&filename='+escape(arg);
+        }
+        function upload(){
+                var w = 400;
+                var h = 200;
+                window.open('".$path_info["basename"]."?action=10&dir_atual=$dir_atual', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+        }
+        function execute(){
+                document.form_action.cmd_arg.value = prompt('".et('TypeCmd').".');
+                if(document.form_action.cmd_arg.value.length>0){
+                    if(confirm('".et('ConfExec')." \\' '+document.form_action.cmd_arg.value+' \\' ?')) {
+                        var w = 800;
+                        var h = 600;
+                        window.open('".$path_info["basename"]."?action=6&dir_atual=$dir_atual&cmd='+escape(document.form_action.cmd_arg.value), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
                     }
-                    if (erro!=''){
-                        document.form_action.cmd_arg.focus();
-                        alert(erro);
-                    } else if(document.form_action.cmd_arg.value.length>0) {
+                }
+        }
+        function decompress(arg){
+                if(confirm('".strtoupper(et('Decompress'))." \\' '+arg+' \\' ?')) {
+                    document.form_action.action.value = 72;
+                    document.form_action.cmd_arg.value = arg;
+                    document.form_action.submit();
+                }
+        }
+        function edit_file(arg){
+                var w = 800;
+                var h = 600;
+                if(confirm('".strtoupper(et('Edit'))." \\' '+arg+' \\' ?')) window.open('".$path_info["basename"]."?action=7&dir_atual=$dir_atual&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+        }
+        function config(){
+                var w = 600;
+                var h = 370;
+                window.open('".$path_info["basename"]."?action=2', 'win_config', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+        }
+        function server_info(arg){
+                var w = 800;
+                var h = 600;
+                window.open('".$path_info["basename"]."?action=5', 'win_serverinfo', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+        }
+        function shell(){
+                var w = 800;
+                var h = 600;
+                window.open('".$path_info["basename"]."?action=9', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+        }
+        function view(arg){
+                var w = 800;
+                var h = 600;
+                if(confirm('".strtoupper(et('View'))." \\' '+arg+' \\' ?')) window.open('".$path_info["basename"]."?action=4&dir_atual=$dir_atual&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes');
+        }
+        function rename(arg){
+                var nome = '';
+                if (nome = prompt('".strtoupper(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...')) document.location.href='".$path_info["basename"]."?frame=3&action=3&dir_atual=$dir_atual&old_name='+escape(arg)+'&new_name='+escape(nome);
+        }
+        function set_dir_dest(arg){
+            document.form_action.dir_dest.value=arg;
+            if (document.form_action.action.value.length>0) test(document.form_action.action.value);
+            else alert('".et('JSError').".');
+        }
+        function sel_dir(arg){
+            document.form_action.action.value = arg;
+            document.form_action.dir_dest.value='';
+            if (!is_anything_selected()) alert('".et('NoSel').".');
+            else {
+                if (!getCookie('sel_dir_warn')) {
+                    alert('".et('SelDir').".');
+                    document.cookie='sel_dir_warn'+'='+escape('true')+';';
+                }
+                parent.frame2.set_flag(true);
+            }
+        }
+        function set_chmod_arg(arg){
+            document.form_action.chmod_arg.value=arg;
+            if (document.form_action.action.value.length>0) test(document.form_action.action.value);
+            else alert('".et('JSError')."');
+        }
+        function chmod(arg){
+            document.form_action.action.value = arg;
+            document.form_action.dir_dest.value='';
+            document.form_action.chmod_arg.value='';
+            if (!is_anything_selected()) alert('".et('NoSel').".');
+            else {
+                var w = 280;
+                var h = 180;
+                window.open('".$path_info["basename"]."?action=8', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
+            }
+        }
+        function test_action(){
+            if (document.form_action.action.value != 0) return true;
+            else return false;
+        }
+        function test_prompt(arg){
+                var erro='';
+                var conf='';
+                if (arg == 1){
+                    document.form_action.cmd_arg.value = prompt('".et('TypeDir').".');
+                } else if (arg == 2){
+                    document.form_action.cmd_arg.value = prompt('".et('TypeArq').".');
+                } else if (arg == 71){
+                    if (!is_anything_selected()) erro = '".et('NoSel').".';
+                    else document.form_action.cmd_arg.value = prompt('".et('TypeArqComp')."');
+                }
+                if (erro!=''){
+                    document.form_action.cmd_arg.focus();
+                    alert(erro);
+                } else if(document.form_action.cmd_arg.value.length>0) {
+                    document.form_action.action.value = arg;
+                    document.form_action.submit();
+                }
+        }
+        function strstr(haystack,needle){
+            var index = haystack.indexOf(needle);
+            return (index==-1)?false:index;
+        }
+        function valid_dest(dest,orig){
+            return (strstr(dest,orig)==false)?true:false;
+        }
+        // ArrayAlert - Selection debug only
+        function aa(){
+            var str = 'selected_dir_list:\\n';
+            for (x=0;x<selected_dir_list.length;x++){
+                str += selected_dir_list[x]+'\\n';
+            }
+            str += '\\nselected_file_list:\\n';
+            for (x=0;x<selected_file_list.length;x++){
+                str += selected_file_list[x]+'\\n';
+            }
+            alert(str);
+        }
+        function test(arg){
+                var erro='';
+                var conf='';
+                if (arg == 4){
+                    if (!is_anything_selected()) erro = '".et('NoSel').".\\n';
+                    conf = '".et('RemSel')." ?\\n';
+                } else if (arg == 5){
+                    if (!is_anything_selected()) erro = '".et('NoSel').".\\n';
+                    else if(document.form_action.dir_dest.value.length == 0) erro = '".et('NoDestDir').".';
+                    else if(document.form_action.dir_dest.value == document.form_action.dir_atual.value) erro = '".et('DestEqOrig').".';
+                    else if(!valid_dest(document.form_action.dir_dest.value,document.form_action.dir_atual.value)) erro = '".et('InvalidDest').".';
+                    conf = '".et('CopyTo')." \\' '+document.form_action.dir_dest.value+' \\' ?\\n';
+                } else if (arg == 6){
+                    if (!is_anything_selected()) erro = '".et('NoSel').".';
+                    else if(document.form_action.dir_dest.value.length == 0) erro = '".et('NoDestDir').".';
+                    else if(document.form_action.dir_dest.value == document.form_action.dir_atual.value) erro = '".et('DestEqOrig').".';
+                    else if(!valid_dest(document.form_action.dir_dest.value,document.form_action.dir_atual.value)) erro = '".et('InvalidDest').".';
+                    conf = '".et('MoveTo')." \\' '+document.form_action.dir_dest.value+' \\' ?\\n';
+                } else if (arg == 9){
+                    if (!is_anything_selected()) erro = '".et('NoSel').".';
+                    else if(document.form_action.chmod_arg.value.length == 0) erro = '".et('NoNewPerm').".';
+                    conf = '".et('AlterPermTo')." \\' '+document.form_action.chmod_arg.value+' \\' ?\\n';
+                }
+                if (erro!=''){
+                    document.form_action.cmd_arg.focus();
+                    alert(erro);
+                } else if(conf!='') {
+                    if(confirm(conf)) {
                         document.form_action.action.value = arg;
                         document.form_action.submit();
                     }
+                } else {
+                    document.form_action.action.value = arg;
+                    document.form_action.submit();
+                }
+        }
+        //-->
+        </script>";
+        $out .= "
+        <form name=\"form_action\" action=\"".$path_info["basename"]."\" method=\"post\" onsubmit=\"return test_action();\">
+            <input type=hidden name=\"frame\" value=3>
+            <input type=hidden name=\"action\" value=0>
+            <input type=hidden name=\"dir_dest\" value=\"\">
+            <input type=hidden name=\"chmod_arg\" value=\"\">
+            <input type=hidden name=\"cmd_arg\" value=\"\">
+            <input type=hidden name=\"dir_atual\" value=\"$dir_atual\">
+            <input type=hidden name=\"dir_antes\" value=\"$dir_antes\">
+            <input type=hidden name=\"selected_dir_list\" value=\"\">
+            <input type=hidden name=\"selected_file_list\" value=\"\">";
+        $out .= "
+            <tr>
+            <td bgcolor=\"#DDDDDD\" colspan=20><nobr>
+            <input type=button onclick=\"config()\" value=\"".et('Config')."\">
+            <input type=button onclick=\"server_info()\" value=\"".et('ServerInfo')."\">
+            <input type=button onclick=\"test_prompt(1)\" value=\"".et('CreateDir')."\">
+            <input type=button onclick=\"test_prompt(2)\" value=\"".et('CreateArq')."\">
+            <input type=button onclick=\"execute()\" value=\"".et('ExecCmd')."\">
+            <input type=button onclick=\"upload()\" value=\"".et('Upload')."\">
+            <input type=button onclick=\"shell()\" value=\"".et('Shell')."\">
+            <b>$ip</b>
+            </nobr>";
+        if ($dir_atual != $fm_root_atual){
+            $mat = explode("/",$dir_atual);
+            $dir_antes = "";
+            for($x=0;$x<(count($mat)-2);$x++) $dir_antes .= $mat[$x]."/";
+            $uplink = "<a href=\"".$path_info["basename"]."?frame=3&dir_atual=$dir_antes\"><<</a> ";
+        }
+        if($entry_count){
+            $out .= "
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20><nobr>$uplink <a href=\"".$path_info["basename"]."?frame=3&dir_atual=$dir_atual\">$dir_atual</a></nobr>
+                <tr>
+                <td bgcolor=\"#DDDDDD\" colspan=20><nobr>
+                      <input type=\"button\" style=\"width:60\" onclick=\"selectANI(this)\" value=\"".et('SelAll')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"selectANI(this)\" value=\"".et('SelInverse')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"test(4)\" value=\"".et('Rem')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(6)\" value=\"".et('Move')."\">
+                      <input type=\"button\" style=\"width:100\" onclick=\"test_prompt(71)\" value=\"".et('Compress')."\">";
+            if ($islinux) $out .= "
+                      <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
+            $out .= "
+                      <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
+            $out .= "
+                </nobr>
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20><DIV ID=\"sel_status\"></DIV></td></tr>";
+            $dir_out="";
+            $file_out="";
+            foreach ($entry_list as $ind=>$dir_entry) {
+                 $file = $dir_entry["name"];
+                 if ($dir_entry["type"]=="dir"){
+                     $dir_out .= "
+                                 <tr ID=\"entry$ind\" onmouseover=\"selectEntry(this, 'over');\" onmousedown=\"selectEntry(this, 'click');\">
+                                 <td align=left bgcolor=\"#".$fm_color['Dir']."\"><nobr><a href=\"JavaScript:go('$file')\">$file</a></nobr>
+                                 <td bgcolor=\"#".$fm_color['Dir']."\">".$dir_entry["p"];
+                     if ($islinux) $dir_out .= "<td bgcolor=\"#".$fm_color['Dir']."\">".$dir_entry["u"]."<td bgcolor=\"#".$fm_color['Dir']."\">".$dir_entry["g"];
+                     $dir_out .= "
+                                 <td bgcolor=\"#".$fm_color['Dir']."\">".$dir_entry["sizet"]."
+                                 <td bgcolor=\"#".$fm_color['Dir']."\">".$dir_entry["datet"];
+                     if ($file_count) $dir_out .= "
+                                 <td bgcolor=\"#".$fm_color['Dir']."\" align=center>";
+                     // Opções de diretório
+                     if ( is_writable($dir_atual.$file) ) $dir_out .= "
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"JavaScript:if(confirm('".et('ConfRem')." \\'".$file."\\' ?')) document.location.href='".$path_info["basename"]."?frame=3&action=8&cmd_arg=".$file."&dir_atual=$dir_atual'\">".et('Rem')."</a>
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"JavaScript:rename('$file')\">".et('Ren')."</a>";
+                     $dir_out .= "
+                                 </tr>";
+                 } else {
+                     $file_out .= "
+                                 <tr ID=\"entry$ind\" onmouseover=\"selectEntry(this, 'over');\" onmousedown=\"selectEntry(this, 'click');\">
+                                 <td align=left bgcolor=\"#FFFFFF\"><nobr><a href=\"JavaScript:download('$file')\">$file</a></nobr>
+                                 <td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["p"];
+                     if ($islinux) $file_out .= "<td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["u"]."<td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["g"];
+                     $file_out .= "
+                                 <td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["sizet"]."
+                                 <td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["datet"]."
+                                 <td bgcolor=\"#".$fm_color['File']."\">".$dir_entry["extt"];
+                     // Opções de arquivo
+                     if ( is_writable($dir_atual.$file) ) $file_out .= "
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".$file."\\' ?')) document.location.href='".$path_info["basename"]."?frame=3&action=8&cmd_arg=".$file."&dir_atual=$dir_atual'\">".et('Rem')."</a>
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"javascript:rename('$file')\">".et('Ren')."</a>";
+                     if ( is_readable($dir_atual.$file) && (strpos(".wav#.mp3#.mid#.avi#.mov#.mpeg#.mpg#.rm#.iso#.bin#.img#.dll#.psd#.fla#.swf#.class#.ppt#.jpg#.gif#.png#.wmf#.eps#.bmp#.msi#.exe#.com#.rar#.tar#.zip#.bz2#.tbz2#.bz#.tbz#.bzip#.gzip#.gz#.tgz#", $dir_entry["ext"]."#" ) === false)) $file_out .= "
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"javascript:edit_file('$file')\">".et('Edit')."</a>";
+                     if ( is_readable($dir_atual.$file) && strlen($dir_entry["ext"]) && (strpos(".tar#.zip#.bz2#.tbz2#.bz#.tbz#.bzip#.gzip#.gz#.tgz#", $dir_entry["ext"]."#" ) !== false)) $file_out .= "
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"javascript:decompress('$file')\">".et('Decompress')."</a>";
+                     if( $is_reachable && is_readable($dir_atual.$file) && (strpos(".txt#.sys#.bat#.ini#.conf#.swf#.php#.php3#.asp#.html#.htm#.jpg#.gif#.png#.bmp#", $dir_entry["ext"]."#" ) !== false)) $file_out .= "
+                                 <td bgcolor=\"#FFFFFF\" align=center><a href=\"javascript:view('$file');\">".et('View')."</a>";
+                     $file_out .= "</tr>";
+                 }
             }
-            function test(arg){
-                    var erro='';
-                    var conf='';
-                    if (arg == 4){
-                        if (!is_anything_selected()) erro = '".et('NoSel').".\\n';
-                        conf = '".et('RemSel')." ?\\n';
-                    } else if (arg == 5){
-                        if (!is_anything_selected()) erro = '".et('NoSel').".\\n';
-                        else if(document.form_action.dir_dest.value.length == 0) erro = '".et('NoDestDir').".';
-                        else if(document.form_action.dir_dest.value == document.form_action.dir_atual.value) erro = '".et('DestEqOrig').".';
-                        conf = '".et('CopyTo')." \\' '+document.form_action.dir_dest.value+' \\' ?\\n';
-                    } else if (arg == 6){
-                        if (!is_anything_selected()) erro = '".et('NoSel').".';
-                        else if(document.form_action.dir_dest.value.length == 0) erro = '".et('NoDestDir').".';
-                        else if(document.form_action.dir_dest.value == document.form_action.dir_atual.value) erro = '".et('DestEqOrig').".';
-                        conf = '".et('MoveTo')." \\' '+document.form_action.dir_dest.value+' \\' ?\\n';
-                    } else if (arg == 9){
-                        if (!is_anything_selected()) erro = '".et('NoSel').".';
-                        else if(document.form_action.chmod_arg.value.length == 0) erro = '".et('NoNewPerm').".';
-                        conf = '".et('AlterPermTo')." \\' '+document.form_action.chmod_arg.value+' \\' ?\\n';
-                    }
-                    if (erro!=''){
-                        document.form_action.cmd_arg.focus();
-                        alert(erro);
-                    } else if(conf!='') {
-                        if(confirm(conf)) {
-                            document.form_action.action.value = arg;
-                            document.form_action.submit();
-                        }
-                    } else {
-                        document.form_action.action.value = arg;
-                        document.form_action.submit();
-                    }
+            $out .= $dir_out;
+            if ($entry_count){
+                $out .= "
+                <tr>
+                      <td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or1&dir_atual=$dir_atual\">".et('Name')."</a>
+                      <td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or2&dir_atual=$dir_atual\">".et('Perms')."</a>";
+                if ($islinux) $out .= "<td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or3&dir_atual=$dir_atual\">".et('Owner')."</a><td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or4&dir_atual=$dir_atual\">".et('Group')."</a>";
+                $out .= "
+                      <td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or5&dir_atual=$dir_atual\">".et('Size')."</a>
+                      <td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or6&dir_atual=$dir_atual\">".et('Date')."</a>";
+                if ($file_count) $out .= "
+                      <td bgcolor=\"#DDDDDD\"><a href=\"".$path_info["basename"]."?frame=3&or_by=$or7&dir_atual=$dir_atual\">".et('Type')."</a>";
+                $out .= "
+                      <td bgcolor=\"#DDDDDD\" colspan=20>";
+
             }
+            $out .= $file_out;
+            $out .= "
+                <tr>
+                <td bgcolor=\"#DDDDDD\" colspan=20><nobr>
+                      <input type=\"button\" style=\"width:60\" onclick=\"selectANI(this)\" value=\"".et('SelAll')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"selectANI(this)\" value=\"".et('SelInverse')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"test(4)\" value=\"".et('Rem')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
+                      <input type=\"button\" style=\"width:60\" onclick=\"sel_dir(6)\" value=\"".et('Move')."\">
+                      <input type=\"button\" style=\"width:100\" onclick=\"test_prompt(71)\" value=\"".et('Compress')."\">";
+            if ($islinux) $out .= "
+                      <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
+            $out .= "
+                      <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
+            $out .= "
+                </nobr></td>
+                </tr>";
+            $out .= "
+            </form>";
+            $out .= "
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20>$dir_count ".et('Dir_s')." ".et('And')." $file_count ".et('File_s')." = ".formatsize($total_size)."</td></tr>";
+            if ($quota_mb) {
+                $out .= "
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20>".et('Partition').": ".formatsize(($quota_mb*1024*1024))." ".et('Total')." - ".formatsize(($quota_mb*1024*1024)-total_size($fm_root_atual))." ".et('Free')."</td></tr>";
+            } else {
+                $out .= "
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20>".et('Partition').": ".formatsize(disk_total_space($dir_atual))." ".et('Total')." - ".formatsize(disk_free_space($fm_root_atual))." ".et('Free')."</td></tr>";
+            }
+            $tf = getmicrotime();
+            $tt = ($tf - $ti);
+            $out .= "
+                <tr><td bgcolor=\"#DDDDDD\" colspan=20>".et('RenderTime').": ".substr($tt,0,strrpos($tt,".")+5)." ".et('Seconds')."</td></tr>";
+            $out .= "
+            <script language=\"Javascript\" type=\"text/javascript\">
+            <!--
+                update_sel_status();
             //-->
             </script>";
-    } else echo "<br><font color=red>".et('IOError').".<br>$dir_atual</font>";
+        } else {
+            $out .= "
+            <tr>
+            <td bgcolor=\"#DDDDDD\" width=\"1%\">$uplink<td bgcolor=\"#DDDDDD\" colspan=20><nobr><a href=\"".$path_info["basename"]."?frame=3&dir_atual=$dir_atual\">$dir_atual</a></nobr>
+            <tr><td bgcolor=\"#DDDDDD\" colspan=20>".et('EmptyDir').".</tr>";
+        }
+    } else $out .= "<tr><td><font color=red>".et('IOError').".<br>$dir_atual</font>";
+    $out .= "</table>";
+    echo $out;
 }
 function upload_form(){
-    global $_FILES,$dir_atual,$dir_dest,$fechar,$quota_mb;
+    global $_FILES,$dir_atual,$dir_dest,$fechar,$quota_mb,$path_info;
     $num_uploads = 5;
     html_header();
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">";
+    echo "<body marginwidth=\"0\" marginheight=\"0\">";
     if (count($_FILES)==0){
         echo "
         <table height=\"100%\" border=0 cellspacing=0 cellpadding=2 align=center>
-        <form name=\"upload_form\" action=\"index.php\" method=\"post\" ENCTYPE=\"multipart/form-data\">
+        <form name=\"upload_form\" action=\"".$path_info["basename"]."\" method=\"post\" ENCTYPE=\"multipart/form-data\">
         <input type=hidden name=dir_dest value=\"$dir_atual\">
         <input type=hidden name=action value=10>
         <tr><th colspan=2>".et('Upload')."</th></tr>
@@ -1411,11 +1657,11 @@ function upload_form(){
         }
         echo "
         <input type=button value=\"".et('Send')."\" onclick=\"test_upload_form()\"></nobr>
-        <tr><td>&nbsp;<td><input type=checkbox name=fechar value=\"1\"> <a href=\"javascript:troca();\">".et('AutoClose')."</a>
-        <tr><td colspan=2>&nbsp;</td></tr>
+        <tr><td> <td><input type=checkbox name=fechar value=\"1\"> <a href=\"JavaScript:troca();\">".et('AutoClose')."</a>
+        <tr><td colspan=2> </td></tr>
         </form>
         </table>
-        <script language=\"Javascript\">
+        <script language=\"Javascript\" type=\"text/javascript\">
         <!--
             function troca(){
                 if(document.upload_form.fechar.checked){document.upload_form.fechar.checked=false;}else{document.upload_form.fechar.checked=true;}
@@ -1438,12 +1684,12 @@ function upload_form(){
                 <tr><th colspan=2><nobr>".et('Destination').": $dir_dest</nobr>";
         for ($x=0;$x<$num_uploads;$x++){
             $temp_file = $_FILES["file".$x]["tmp_name"];
-            $file_name = $_FILES["file".$x]["name"];
-            if (strlen($file_name)>0) $resul = save_upload($temp_file,$file_name,$dir_dest);
+            $filename = $_FILES["file".$x]["name"];
+            if (strlen($filename)) $resul = save_upload($temp_file,$filename,$dir_dest);
             else $resul = 7;
             switch($resul){
                 case 1:
-                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=green><b> ".et('FileSent').":</font><td>".$file_name."</td></tr>\n";
+                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=green><b> ".et('FileSent').":</font><td>".$filename."</td></tr>\n";
                 break;
                 case 2:
                 $out .= "<tr><td colspan=2><font color=red><b>".et('IOError')."</font></td></tr>\n";
@@ -1454,13 +1700,13 @@ function upload_form(){
                 $x = $upload_num;
                 break;
                 case 4:
-                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=red><b> ".et('InvExt').":</font><td>".$file_name."</td></tr>\n";
+                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=red><b> ".et('InvExt').":</font><td>".$filename."</td></tr>\n";
                 break;
                 case 5:
-                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=red><b> ".et('FileNoOverw')."</font><td>".$file_name."</td></tr>\n";
+                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=red><b> ".et('FileNoOverw')."</font><td>".$filename."</td></tr>\n";
                 break;
                 case 6:
-                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=green><b> ".et('FileOverw').":</font><td>".$file_name."</td></tr>\n";
+                $out .= "<tr><td><b>".strzero($x+1,3).".<font color=green><b> ".et('FileOverw').":</font><td>".$filename."</td></tr>\n";
                 break;
                 case 7:
                 $out .= "<tr><td colspan=2><b>".strzero($x+1,3).".<font color=red><b> ".et('FileIgnored')."</font></td></tr>\n";
@@ -1468,7 +1714,7 @@ function upload_form(){
         }
         if ($fechar) {
             echo "
-            <script language=\"Javascript\">
+            <script language=\"Javascript\" type=\"text/javascript\">
             <!--
                 window.close();
             //-->
@@ -1478,9 +1724,9 @@ function upload_form(){
             echo "
             <table height=\"100%\" border=0 cellspacing=0 cellpadding=2 align=center>
             $out
-            <tr><td colspan=2>&nbsp;</td></tr>
+            <tr><td colspan=2> </td></tr>
             </table>
-            <script language=\"Javascript\">
+            <script language=\"Javascript\" type=\"text/javascript\">
             <!--
                 window.focus();
             //-->
@@ -1492,7 +1738,7 @@ function upload_form(){
 }
 function chmod_form(){
     $aux = "
-    <script type=\"text/javascript\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
     function octalchange()
     {
@@ -1575,7 +1821,7 @@ function chmod_form(){
     </script>
     ";
     html_header($aux);
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">
+    echo "<body marginwidth=\"0\" marginheight=\"0\">
     <form name=\"chmod_form\">
     <TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\" ALIGN=CENTER>
     <tr><th colspan=4>".et('Perms')."</th></tr>
@@ -1587,40 +1833,40 @@ function chmod_form(){
     <table cellpadding=\"2\" cellspacing=\"0\" border=\"0\" ALIGN=CENTER>
     <tr bgcolor=\"#333333\">
     <td WIDTH=\"60\" align=\"left\"> </td>
-    <td WIDTH=\"55\" align=\"center\" style=\"color:#ffffff\"><b>".et('Owner')."
+    <td WIDTH=\"55\" align=\"center\" style=\"color:#FFFFFF\"><b>".et('Owner')."
     </b></td>
-    <td WIDTH=\"55\" align=\"center\" style=\"color:#ffffff\"><b>".et('Group')."
+    <td WIDTH=\"55\" align=\"center\" style=\"color:#FFFFFF\"><b>".et('Group')."
     </b></td>
-    <td WIDTH=\"55\" align=\"center\" style=\"color:#ffffff\"><b>".et('Other')."
+    <td WIDTH=\"55\" align=\"center\" style=\"color:#FFFFFF\"><b>".et('Other')."
     <b></td>
     </tr>
-    <tr bgcolor=\"#dddddd\">
+    <tr bgcolor=\"#DDDDDD\">
     <td WIDTH=\"60\" align=\"left\" nowrap BGCOLOR=\"#FFFFFF\">".et('Read')."</td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"owner4\" value=\"4\" onclick=\"calc_chmod()\">
     </td>
-    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#ffffff\"><input type=\"checkbox\" name=\"group4\" value=\"4\" onclick=\"calc_chmod()\">
+    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#FFFFFF\"><input type=\"checkbox\" name=\"group4\" value=\"4\" onclick=\"calc_chmod()\">
     </td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"other4\" value=\"4\" onclick=\"calc_chmod()\">
     </td>
     </tr>
-    <tr bgcolor=\"#dddddd\">
+    <tr bgcolor=\"#DDDDDD\">
     <td WIDTH=\"60\" align=\"left\" nowrap BGCOLOR=\"#FFFFFF\">".et('Write')."</td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"owner2\" value=\"2\" onclick=\"calc_chmod()\"></td>
-    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#ffffff\"><input type=\"checkbox\" name=\"group2\" value=\"2\" onclick=\"calc_chmod()\">
+    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#FFFFFF\"><input type=\"checkbox\" name=\"group2\" value=\"2\" onclick=\"calc_chmod()\">
     </td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"other2\" value=\"2\" onclick=\"calc_chmod()\">
     </td>
     </tr>
-    <tr bgcolor=\"#dddddd\">
+    <tr bgcolor=\"#DDDDDD\">
     <td WIDTH=\"60\" align=\"left\" nowrap BGCOLOR=\"#FFFFFF\">".et('Exec')."</td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"owner1\" value=\"1\" onclick=\"calc_chmod()\">
     </td>
-    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#ffffff\"><input type=\"checkbox\" name=\"group1\" value=\"1\" onclick=\"calc_chmod()\">
+    <td WIDTH=\"55\" align=\"center\" bgcolor=\"#FFFFFF\"><input type=\"checkbox\" name=\"group1\" value=\"1\" onclick=\"calc_chmod()\">
     </td>
     <td WIDTH=\"55\" align=\"center\" bgcolor=\"#EEEEEE\">
     <input type=\"checkbox\" name=\"other1\" value=\"1\" onclick=\"calc_chmod()\">
@@ -1628,25 +1874,24 @@ function chmod_form(){
     </tr>
     </TABLE>
     <TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\" ALIGN=CENTER>
-    <tr><td colspan=2><input type=checkbox name=sticky value=\"1\" onclick=\"calc_chmod()\"> <a href=\"javascript:troca();\">".et('StickyBit')."</a><td colspan=2 align=right><input type=button value=\"".et('Apply')."\" onClick=\"window.opener.set_chmod_arg(document.chmod_form.t_total.value); window.close();\"></tr>
+    <tr><td colspan=2><input type=checkbox name=sticky value=\"1\" onclick=\"calc_chmod()\"> <a href=\"JavaScript:troca();\">".et('StickyBit')."</a><td colspan=2 align=right><input type=button value=\"".et('Apply')."\" onClick=\"window.opener.set_chmod_arg(document.chmod_form.t_total.value); window.close();\"></tr>
     </table>
     </form>
     </body>\n</html>";
 }
 function view(){
-    global $doc_root,$path_info,$url_info,$dir_atual,$islinux,$file_name,$is_reachable;
+    global $doc_root,$path_info,$url_info,$dir_atual,$islinux,$filename,$is_reachable;
     html_header();
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">
-    <script language=\"Javascript\">
+    echo "<body marginwidth=\"0\" marginheight=\"0\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
         window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);";
     if ($is_reachable){
         $url = $url_info["scheme"]."://".$url_info["host"];
-        if (strlen($url_info["port"])>0) $url = substr($url,0,strlen($url)-1).":".$url_info["port"]."/";
+        if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
         // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
-        if ($islinux) $url .= str_replace($doc_root,"",$dir_atual).$file_name;
-        else $url .= str_replace($doc_root,"",strtolower($dir_atual)).$file_name;
-        echo "
+        $url .= str_replace($doc_root,"",$dir_atual).$filename;
+		echo "
         document.location.href='$url';";
     } else {
         echo "
@@ -1659,8 +1904,8 @@ function view(){
     </body>\n</html>";
 }
 function edit_file_form(){
-    global $dir_atual,$file_name,$file_data,$save_file;
-    $file = $dir_atual.$file_name;
+    global $dir_atual,$filename,$file_data,$save_file,$path_info;
+    $file = $dir_atual.$filename;
     if ($save_file){
         $fh=fopen($file,"w");
         fputs($fh,$file_data,strlen($file_data));
@@ -1670,30 +1915,34 @@ function edit_file_form(){
     $file_data=fread($fh, filesize($file));
     fclose($fh);
     html_header();
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">
+    echo "<body marginwidth=\"0\" marginheight=\"0\">
     <table border=0 cellspacing=0 cellpadding=5 align=center>
-    <form name=\"edit_form\" action=\"index.php\" method=\"post\">
+    <form name=\"edit_form\" action=\"".$path_info["basename"]."\" method=\"post\">
     <input type=hidden name=action value=\"7\">
     <input type=hidden name=save_file value=\"1\">
     <input type=hidden name=dir_atual value=\"$dir_atual\">
-    <input type=hidden name=file_name value=\"$file_name\">
+    <input type=hidden name=filename value=\"$filename\">
     <tr><th colspan=2>".$file."</th></tr>
     <tr><td colspan=2><textarea name=file_data rows=33 cols=105>".htmlencode($file_data)."</textarea></td></tr>
     <tr><td><input type=button value=\"".et('Refresh')."\" onclick=\"document.edit_form_refresh.submit()\"></td><td align=right><input type=button value=\"".et('SaveFile')."\" onclick=\"go_save()\"></td></tr>
     </form>
-    <form name=\"edit_form_refresh\" action=\"index.php\" method=\"post\">
+    <form name=\"edit_form_refresh\" action=\"".$path_info["basename"]."\" method=\"post\">
     <input type=hidden name=action value=\"7\">
     <input type=hidden name=dir_atual value=\"$dir_atual\">
-    <input type=hidden name=file_name value=\"$file_name\">
+    <input type=hidden name=filename value=\"$filename\">
     </form>
     </table>
-    <script language=\"Javascript\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
         window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);
-        function go_save(){
-        ";
-    if (is_writable($file)) echo "document.edit_form.submit();";
-    else echo "if(confirm('".et('ConfTrySave')." ?')) document.edit_form.submit();";
+        function go_save(){";
+    if (is_writable($file)) {
+        echo "
+        document.edit_form.submit();";
+    } else {
+        echo "
+        if(confirm('".et('ConfTrySave')." ?')) document.edit_form.submit();";
+    }
     echo "
         }
     //-->
@@ -1702,8 +1951,8 @@ function edit_file_form(){
 }
 function config_form(){
     global $cfg;
-    global $dir_atual,$path_info,$fm_root_atual,$lang,$version;
-    global $config_action,$newsenha,$newlang,$newfm_root;
+    global $dir_atual,$script_filename,$doc_root,$path_info,$fm_root_atual,$lang,$error_reporting,$version;
+    global $config_action,$newsenha,$newlang,$newerror,$newfm_root;
     $Warning = "";
     switch ($config_action){
         case 1:
@@ -1712,11 +1961,11 @@ function config_form(){
                 while (!feof($fh)) $data .= fread($fh,1024);
                 fclose($fh);
                 $data = unserialize($data);
-                $ChkVerWarning = "<tr><td align=right>&nbsp;";
-                if (is_array($data)&&count($data)>0){
+                $ChkVerWarning = "<tr><td align=right> ";
+                if (is_array($data)&&count($data)){
                     // sf.net logo
-                    $ChkVerWarning .= "<a href=\"javascript:open_win('http://sourceforge.net')\"><img src=\"http://sourceforge.net/sflogo.php?group_id=114392&amp;type=1\" width=\"88\" height=\"31\" border=\"0\" alt=\"SourceForge.net Logo\" /></a>";
-                    if (str_replace(".","",$data['version'])>str_replace(".","",$cfg->data['version'])) $ChkVerWarning .= "<td><a href=\"javascript:open_win('http://prdownloads.sourceforge.net/phpfm/phpFileManager-".$data['version'].".zip?download')\"><font color=green>".et('ChkVerAvailable')."</font></a>";
+                    $ChkVerWarning .= "<a href=\"JavaScript:open_win('http://sourceforge.net')\"><img src=\"http://sourceforge.net/sflogo.php?group_id=114392&type=1\" width=\"88\" height=\"31\" border=\"0\" alt=\"SourceForge.net Logo\" /></a>";
+                    if (str_replace(".","",$data['version'])>str_replace(".","",$cfg->data['version'])) $ChkVerWarning .= "<td><a href=\"JavaScript:open_win('http://prdownloads.sourceforge.net/phpfm/phpFileManager-".$data['version'].".zip?download')\"><font color=green>".et('ChkVerAvailable')."</font></a>";
                     else $ChkVerWarning .= "<td><font color=red>".et('ChkVerNotAvailable')."</font>";
                 } else $ChkVerWarning .= "<td><font color=red>".et('ChkVerError')."</font>";
             } else $ChkVerWarning .= "<td><font color=red>".et('ChkVerError')."</font>";
@@ -1728,10 +1977,15 @@ function config_form(){
                 $lang = $newlang;
                 $reload = true;
             }
-            $newfm_root = formata_path($newfm_root);
+            if ($cfg->data['error_reporting'] != $newerror){
+                $cfg->data['error_reporting'] = $newerror;
+                $error_reporting = $newerror;
+                $reload = true;
+            }
+            $newfm_root = formatpath($newfm_root);
             if ($cfg->data['fm_root'] != $newfm_root){
                 $cfg->data['fm_root'] = $newfm_root;
-                if (strlen($newfm_root)>0) $dir_atual = $newfm_root;
+                if (strlen($newfm_root)) $dir_atual = $newfm_root;
                 else $dir_atual = $path_info["dirname"]."/";
                 setcookie("fm_root_atual", $newfm_root , 0 , "/");
                 $reload = true;
@@ -1746,44 +2000,45 @@ function config_form(){
         case 3:
             if ($cfg->data['auth_pass'] != md5($newsenha)){
                 $cfg->data['auth_pass'] = md5($newsenha);
-                setcookie("loggedon_pass", md5($newsenha) , 0 , "/");
+                setcookie("loggedon", md5($newsenha) , 0 , "/");
             }
             $cfg->save();
             $Warning2 = et('PassSaved')."...";
         break;
     }
     html_header();
-    echo "<body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">\n";
+    echo "<body marginwidth=\"0\" marginheight=\"0\">\n";
     echo "
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
-    <form name=\"config_form\" action=\"index.php\" method=\"post\">
+    <form name=\"config_form\" action=\"".$path_info["basename"]."\" method=\"post\">
     <input type=hidden name=action value=2>
     <input type=hidden name=config_action value=0>
     <tr><td colspan=2 align=center><b>".strtoupper(et('Configurations'))."</b></td></tr>
     </table>
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
     <tr><td align=right width=\"1%\">".et('Version').":<td>$version</td></tr>
-    <tr><td align=right>".et('Size').":<td>".getsize($_SERVER["SCRIPT_FILENAME"])."</td></tr>
-    <tr><td align=right>".et('Website').":<td><a href=\"javascript:open_win('http://phpfm.sf.net')\">http://phpfm.sf.net</a></td></tr>";
-    if (strlen($ChkVerWarning)>0) echo $ChkVerWarning.$data['warnings'];
-    else echo "<tr><td align=right>&nbsp;<td><input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\">";
+    <tr><td align=right>".et('Size').":<td>".getsize($script_filename)."</td></tr>
+    <tr><td align=right>".et('Website').":<td><a href=\"JavaScript:open_win('http://phpfm.sf.net')\">http://phpfm.sf.net</a></td></tr>";
+    if (strlen($ChkVerWarning)) echo $ChkVerWarning.$data['warnings'];
+    else echo "<tr><td align=right> <td><input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\">";
     echo "
-    <tr><td align=right width=1><nobr>".et('DocRoot').":</nobr><td>".$_SERVER["DOCUMENT_ROOT"]."</td></tr>
-    <tr><td align=right><nobr>".et('FLRoot').":</nobr><td><input type=text size=60 name=newfm_root value=\"".$cfg->data['fm_root']."\"></td></tr>
+    <tr><td align=right width=1><nobr>".et('DocRoot').":</nobr><td>".$doc_root."</td></tr>
+    <tr><td align=right><nobr>".et('FLRoot').":</nobr><td><input type=text size=60 name=newfm_root value=\"".$cfg->data['fm_root']."\" onkeypress=\"enterSubmit(event,'test_config_form(2)')\"></td></tr>
     <tr><td align=right>".et('Lang').":<td><select name=newlang><option value=en>English<option value=pt>Português</select></td></tr>
-    <tr><td>&nbsp;<td><input type=button value=\"".et('SaveConfig')."\" onclick=\"test_config_form(2)\">";
-    if (strlen($Warning1)>0) echo " <font color=red>$Warning1</font>";
+    <tr><td align=right>".et('ErrorReport').":<td><select name=newerror><option value=\"\">NONE<option value=\"".E_ALL."\">E_ALL<option value=\"".E_ERROR."\">E_ERROR<option value=\"".(E_ERROR | E_WARNING)."\">E_ERROR & E_WARNING<option value=\"".(E_ERROR | E_WARNING | E_NOTICE)."\">E_ERROR & E_WARNING & E_NOTICE</select></td></tr>
+    <tr><td> <td><input type=button value=\"".et('SaveConfig')."\" onclick=\"test_config_form(2)\">";
+    if (strlen($Warning1)) echo " <font color=red>$Warning1</font>";
     echo "
-    <tr><td align=right>".et('Pass').":<td><input type=text size=30 name=newsenha value=\"\"></td></tr>
-    <tr><td>&nbsp;<td><input type=button value=\"".et('SavePass')."\" onclick=\"test_config_form(3)\">";
-    if (strlen($Warning2)>0) echo " <font color=red>$Warning2</font>";
+    <tr><td align=right>".et('Pass').":<td><input type=text size=30 name=newsenha value=\"\" onkeypress=\"enterSubmit(event,'test_config_form(3)')\"></td></tr>
+    <tr><td> <td><input type=button value=\"".et('SavePass')."\" onclick=\"test_config_form(3)\">";
+    if (strlen($Warning2)) echo " <font color=red>$Warning2</font>";
     echo "</td></tr>";
     echo "
     </form>
     </table>
-    <script language=\"Javascript\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
-        function seta(sel,val){
+        function set_select(sel,val){
             for(var x=0;x<sel.length;x++){
                 if(sel.options[x].value==val){
                     sel.options[x].selected=true;
@@ -1791,7 +2046,8 @@ function config_form(){
                 }
             }
         }
-        seta(document.config_form.newlang,'".$cfg->data['lang']."');
+        set_select(document.config_form.newlang,'".$cfg->data['lang']."');
+        set_select(document.config_form.newerror,'".$cfg->data['error_reporting']."');
         function test_config_form(arg){
             document.config_form.config_action.value = arg;
             document.config_form.submit();
@@ -1809,17 +2065,17 @@ function config_form(){
     echo "</body>\n</html>";
 }
 function shell_form(){
-    global $dir_atual,$shell_form,$cmd_arg;
+    global $dir_atual,$shell_form,$cmd_arg,$path_info;
     $data_out = "";
-    if (strlen($cmd_arg)>0){
+    if (strlen($cmd_arg)){
         exec($cmd_arg,$mat);
-        if (count($mat)>0) $data_out = trim(implode("\n",$mat));
+        if (count($mat)) $data_out = trim(implode("\n",$mat));
     }
     switch ($shell_form){
         case 1:
             html_header();
             echo "
-            <body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">
+            <body marginwidth=\"0\" marginheight=\"0\">
             <table border=0 cellspacing=0 cellpadding=0 align=center>
             <form name=\"data_form\">
             <tr><td><textarea name=data_out rows=36 cols=105 READONLY=\"1\"></textarea></td></tr>
@@ -1830,18 +2086,18 @@ function shell_form(){
         case 2:
             html_header();
             echo "
-            <body bgcolor=\"#eeeeee\" marginwidth=\"0\" marginheight=\"0\">
+            <body marginwidth=\"0\" marginheight=\"0\">
             <table border=0 cellspacing=0 cellpadding=0 align=center>
-            <form name=\"shell_form\" action=\"index.php\" method=\"post\">
+            <form name=\"shell_form\" action=\"".$path_info["basename"]."\" method=\"post\">
             <input type=hidden name=dir_atual value=\"$dir_atual\">
             <input type=hidden name=action value=\"9\">
             <input type=hidden name=shell_form value=\"2\">
             <tr><td align=center><input type=text size=90 name=cmd_arg></td></tr>
             </form>";
             echo "
-            <script language=\"Javascript\">
+            <script language=\"Javascript\" type=\"text/javascript\">
             <!--";
-            if (strlen($data_out)>0) echo "
+            if (strlen($data_out)) echo "
                 var val = '# ".htmlencode($cmd_arg)."\\n".htmlencode(str_replace("<","[",str_replace(">","]",str_replace("\n","\\n",str_replace("\\","\\\\",$data_out)))))."\\n';
                 parent.frame1.document.data_form.data_out.value += val;";
             echo "
@@ -1855,7 +2111,7 @@ function shell_form(){
         break;
         default:
             $aux = "
-            <script language=\"Javascript\">
+            <script language=\"Javascript\" type=\"text/javascript\">
             <!--
                 window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);
             //-->
@@ -1863,8 +2119,8 @@ function shell_form(){
             html_header($aux);
             echo "
             <frameset rows=\"570,*\" framespacing=\"0\" frameborder=no>
-                <frame src=\"index.php?action=9&shell_form=1\" name=frame1 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
-                <frame src=\"index.php?action=9&shell_form=2\" name=frame2 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
+                <frame src=\"".$path_info["basename"]."?action=9&shell_form=1\" name=frame1 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
+                <frame src=\"".$path_info["basename"]."?action=9&shell_form=2\" name=frame2 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
             </frameset>
             </html>";
     }
@@ -1908,7 +2164,7 @@ function server_info(){
     ini_set("default_socket_timeout",30);
     ini_set("allow_url_fopen",1);
     ini_set("magic_quotes_gpc",0);
-    echo "<tr><td>&nbsp;<td>Get<td>Set<td>Get";
+    echo "<tr><td> <td>Get<td>Set<td>Get";
     echo "<tr><td>display_errors<td>$display_errors<td>0<td>".ini_get("display_errors");
     echo "<tr><td>ignore_user_abort<td>".($ignore_user_abort?"on":"off")."<td>on<td>".(ignore_user_abort()?"on":"off");
     echo "<tr><td>max_execution_time<td>$max_execution_time<td>0<td>".ini_get("max_execution_time");
@@ -1920,7 +2176,7 @@ function server_info(){
     echo "<tr><td>magic_quotes_gpc<td>$magic_quotes_gpc<td>0<td>".ini_get("magic_quotes_gpc");
     echo "</table><br><br>";
     echo "
-    <script language=\"Javascript\">
+    <script language=\"Javascript\" type=\"text/javascript\">
     <!--
         window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);
         window.focus();
@@ -1932,26 +2188,24 @@ function server_info(){
 // | Session
 // +--------------------------------------------------
 function logout(){
-    setcookie("loggedon_pass",0,0,"/");
+    setcookie("loggedon",0,0,"/");
     form_login();
 }
 function login(){
-    global $senha;
-    global $auth_pass;
+    global $senha,$auth_pass,$path_info;
     if (md5(trim($senha)) == $auth_pass){
-        setcookie("loggedon_pass",$auth_pass,0,"/");
-        header ("Location: index.php");
-    } else header ("Location: index.php?erro=1");
+        setcookie("loggedon",$auth_pass,0,"/");
+        header ("Location: ".$path_info["basename"]."");
+    } else header ("Location: ".$path_info["basename"]."?erro=1");
 }
 function form_login(){
-    global $erro;
-    global $auth_pass;
+    global $erro,$auth_pass,$path_info;
     html_header();
-    echo "<body bgcolor=\"#eeeeee\">\n";
+    echo "<body onLoad=\"if(parent.location.href != self.location.href){ parent.location.href = self.location.href } return true;\">\n";
     if ($auth_pass != md5("")){
         echo "
         <table border=0 cellspacing=0 cellpadding=5>
-            <form name=\"login_form\" action=\"index.php\" method=\"post\">
+            <form name=\"login_form\" action=\"".$path_info["basename"]."\" method=\"post\">
             <tr>
             <td><b>".et('FileMan')."</b>
             </tr>
@@ -1962,7 +2216,7 @@ function form_login(){
             <td><input name=senha type=password size=10> <input type=submit value=\"".et('Send')."\">
             </tr>
         ";
-        if (strlen($erro) > 0) echo "
+        if (strlen($erro)) echo "
             <tr>
             <td align=left><font color=red size=4>".et('InvPass').".</font>
             </tr>
@@ -1970,7 +2224,7 @@ function form_login(){
         echo "
             </form>
         </table>
-             <script language=javascript>
+             <script language=\"Javascript\" type=\"text/javascript\">
              <!--
              document.login_form.senha.focus();
              //-->
@@ -1979,7 +2233,7 @@ function form_login(){
     } else {
         echo "
         <table border=0 cellspacing=0 cellpadding=5>
-            <form name=\"login_form\" action=\"index.php\" method=\"post\">
+            <form name=\"login_form\" action=\"".$path_info["basename"]."\" method=\"post\">
             <input type=hidden name=frame value=3>
             <input type=hidden name=senha value=\"\">
             <tr>
@@ -1997,36 +2251,31 @@ function form_login(){
 function frame3(){
     global $islinux,$cmd_arg,$chmod_arg,$zip_dir,$fm_root_atual;
     global $dir_dest,$dir_atual,$dir_antes;
-    global $dir_file_list,$dir_dir_list,$old_name,$new_name;
+    global $selected_file_list,$selected_dir_list,$old_name,$new_name;
     global $action,$or_by,$order_dir_list_by;
-    if ($action==1){
-        $mat = explode("/",$dir_atual);
-        $aux = $mat[count($mat)-2];
-        if (!strstr($expanded_tree,$aux)) setcookie("expanded_tree", $expanded_tree.":".$aux , 0 , "/");
-    }
     if (!isset($order_dir_list_by)){
         $order_dir_list_by = "1A";
         setcookie("order_dir_list_by", $order_dir_list_by , $cookie_cache_time , "/");
-    } elseif (strlen($or_by)>0){
+    } elseif (strlen($or_by)){
         $order_dir_list_by = $or_by;
         setcookie("order_dir_list_by", $or_by , $cookie_cache_time , "/");
     }
     html_header();
-    echo "<body bgcolor=\"#eeeeee\">\n";
+    echo "<body>\n";
     if ($action){
         switch ($action){
             case 1: // create dir
-            if (strlen($cmd_arg)>0){
-                $cmd_arg = formata_path($dir_atual.$cmd_arg);
+            if (strlen($cmd_arg)){
+                $cmd_arg = formatpath($dir_atual.$cmd_arg);
                 if (!file_exists($cmd_arg)){
                     mkdir($cmd_arg,0777);
                     chmod($cmd_arg,0777);
-                    reloadframe("parent",2);
+                    reloadframe("parent",2,"&ec_dir=".$cmd_arg);
                 } else alert(et('FileDirExists').".");
             }
             break;
             case 2: // create arq
-            if (strlen($cmd_arg)>0){
+            if (strlen($cmd_arg)){
                 $cmd_arg = $dir_atual.$cmd_arg;
                 if (!file_exists($cmd_arg)){
                     if ($fh = @fopen($cmd_arg, "w")){
@@ -2037,28 +2286,28 @@ function frame3(){
             }
             break;
             case 3: // rename arq ou dir
-            if ((strlen($old_name)>0)&&(strlen($new_name)>0)){
+            if ((strlen($old_name))&&(strlen($new_name))){
                 rename($dir_atual.$old_name,$dir_atual.$new_name);
                 if (is_dir($dir_atual.$new_name)) reloadframe("parent",2);
             }
             break;
             case 4: // delete sel
             if(strstr($dir_atual,$fm_root_atual)){
-                if (strlen($dir_file_list)>0){
-                    $dir_file_list = explode("<|*|>",$dir_file_list);
-                    if (count($dir_file_list)>0) {
-                        for($x=0;$x<count($dir_file_list);$x++) {
-                            $dir_file_list[$x] = trim($dir_file_list[$x]);
-                            if (strlen($dir_file_list[$x])>0) total_delete($dir_atual.$dir_file_list[$x],$dir_dest.$dir_file_list[$x]);
+                if (strlen($selected_file_list)){
+                    $selected_file_list = explode("<|*|>",$selected_file_list);
+                    if (count($selected_file_list)) {
+                        for($x=0;$x<count($selected_file_list);$x++) {
+                            $selected_file_list[$x] = trim($selected_file_list[$x]);
+                            if (strlen($selected_file_list[$x])) total_delete($dir_atual.$selected_file_list[$x],$dir_dest.$selected_file_list[$x]);
                         }
                     }
                 }
-                if (strlen($dir_dir_list)>0){
-                    $dir_dir_list = explode("<|*|>",$dir_dir_list);
-                    if (count($dir_dir_list)>0) {
-                        for($x=0;$x<count($dir_dir_list);$x++) {
-                            $dir_dir_list[$x] = trim($dir_dir_list[$x]);
-                            if (strlen($dir_dir_list[$x])>0) total_delete($dir_atual.$dir_dir_list[$x],$dir_dest.$dir_dir_list[$x]);
+                if (strlen($selected_dir_list)){
+                    $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                    if (count($selected_dir_list)) {
+                        for($x=0;$x<count($selected_dir_list);$x++) {
+                            $selected_dir_list[$x] = trim($selected_dir_list[$x]);
+                            if (strlen($selected_dir_list[$x])) total_delete($dir_atual.$selected_dir_list[$x],$dir_dest.$selected_dir_list[$x]);
                         }
                         reloadframe("parent",2);
                     }
@@ -2066,23 +2315,23 @@ function frame3(){
             }
             break;
             case 5: // copy sel
-            if (strlen($dir_dest)>0){
+            if (strlen($dir_dest)){
                 if(strtoupper($dir_dest) != strtoupper($dir_atual)){
-                    if (strlen($dir_file_list)>0){
-                        $dir_file_list = explode("<|*|>",$dir_file_list);
-                        if (count($dir_file_list)>0) {
-                            for($x=0;$x<count($dir_file_list);$x++) {
-                                $dir_file_list[$x] = trim($dir_file_list[$x]);
-                                if (strlen($dir_file_list[$x])>0) total_copy($dir_atual.$dir_file_list[$x],$dir_dest.$dir_file_list[$x]);
+                    if (strlen($selected_file_list)){
+                        $selected_file_list = explode("<|*|>",$selected_file_list);
+                        if (count($selected_file_list)) {
+                            for($x=0;$x<count($selected_file_list);$x++) {
+                                $selected_file_list[$x] = trim($selected_file_list[$x]);
+                                if (strlen($selected_file_list[$x])) total_copy($dir_atual.$selected_file_list[$x],$dir_dest.$selected_file_list[$x]);
                             }
                         }
                     }
-                    if (strlen($dir_dir_list)>0){
-                        $dir_dir_list = explode("<|*|>",$dir_dir_list);
-                        if (count($dir_dir_list)>0) {
-                            for($x=0;$x<count($dir_dir_list);$x++) {
-                                $dir_dir_list[$x] = trim($dir_dir_list[$x]);
-                                if (strlen($dir_dir_list[$x])>0) total_copy($dir_atual.$dir_dir_list[$x],$dir_dest.$dir_dir_list[$x]);
+                    if (strlen($selected_dir_list)){
+                        $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                        if (count($selected_dir_list)) {
+                            for($x=0;$x<count($selected_dir_list);$x++) {
+                                $selected_dir_list[$x] = trim($selected_dir_list[$x]);
+                                if (strlen($selected_dir_list[$x])) total_copy($dir_atual.$selected_dir_list[$x],$dir_dest.$selected_dir_list[$x]);
                             }
                             reloadframe("parent",2);
                         }
@@ -2092,23 +2341,23 @@ function frame3(){
             }
             break;
             case 6: // move sel
-            if (strlen($dir_dest)>0){
+            if (strlen($dir_dest)){
                 if(strtoupper($dir_dest) != strtoupper($dir_atual)){
-                    if (strlen($dir_file_list)>0){
-                        $dir_file_list = explode("<|*|>",$dir_file_list);
-                        if (count($dir_file_list)>0) {
-                            for($x=0;$x<count($dir_file_list);$x++) {
-                                $dir_file_list[$x] = trim($dir_file_list[$x]);
-                                if (strlen($dir_file_list[$x])>0) total_move($dir_atual.$dir_file_list[$x],$dir_dest.$dir_file_list[$x]);
+                    if (strlen($selected_file_list)){
+                        $selected_file_list = explode("<|*|>",$selected_file_list);
+                        if (count($selected_file_list)) {
+                            for($x=0;$x<count($selected_file_list);$x++) {
+                                $selected_file_list[$x] = trim($selected_file_list[$x]);
+                                if (strlen($selected_file_list[$x])) total_move($dir_atual.$selected_file_list[$x],$dir_dest.$selected_file_list[$x]);
                             }
                         }
                     }
-                    if (strlen($dir_dir_list)>0){
-                        $dir_dir_list = explode("<|*|>",$dir_dir_list);
-                        if (count($dir_dir_list)>0) {
-                            for($x=0;$x<count($dir_dir_list);$x++) {
-                                $dir_dir_list[$x] = trim($dir_dir_list[$x]);
-                                if (strlen($dir_dir_list[$x])>0) total_move($dir_atual.$dir_dir_list[$x],$dir_dest.$dir_dir_list[$x]);
+                    if (strlen($selected_dir_list)){
+                        $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                        if (count($selected_dir_list)) {
+                            for($x=0;$x<count($selected_dir_list);$x++) {
+                                $selected_dir_list[$x] = trim($selected_dir_list[$x]);
+                                if (strlen($selected_dir_list[$x])) total_move($dir_atual.$selected_dir_list[$x],$dir_dest.$selected_dir_list[$x]);
                             }
                             reloadframe("parent",2);
                         }
@@ -2118,7 +2367,7 @@ function frame3(){
             }
             break;
             case 71: // compress sel
-            if (strlen($cmd_arg)>0){
+            if (strlen($cmd_arg)){
                 ignore_user_abort(true);
                 ini_set("display_errors",0);
                 ini_set("max_execution_time",0);
@@ -2129,21 +2378,21 @@ function frame3(){
                 elseif (strstr($cmd_arg,".gzip")) $zipfile = new gzip_file($cmd_arg);
                 if ($zipfile){
                     $zipfile->set_options(array('basedir'=>$dir_atual,'overwrite'=>1,'level'=>3));
-                    if (strlen($dir_file_list)>0){
-                        $dir_file_list = explode("<|*|>",$dir_file_list);
-                        if (count($dir_file_list)>0) {
-                            for($x=0;$x<count($dir_file_list);$x++) {
-                                $dir_file_list[$x] = trim($dir_file_list[$x]);
-                                if (strlen($dir_file_list[$x])>0) $zipfile->add_files($dir_file_list[$x]);
+                    if (strlen($selected_file_list)){
+                        $selected_file_list = explode("<|*|>",$selected_file_list);
+                        if (count($selected_file_list)) {
+                            for($x=0;$x<count($selected_file_list);$x++) {
+                                $selected_file_list[$x] = trim($selected_file_list[$x]);
+                                if (strlen($selected_file_list[$x])) $zipfile->add_files($selected_file_list[$x]);
                             }
                         }
                     }
-                    if (strlen($dir_dir_list)>0){
-                        $dir_dir_list = explode("<|*|>",$dir_dir_list);
-                        if (count($dir_dir_list)>0) {
-                            for($x=0;$x<count($dir_dir_list);$x++) {
-                                $dir_dir_list[$x] = trim($dir_dir_list[$x]);
-                                if (strlen($dir_dir_list[$x])>0) $zipfile->add_files($dir_dir_list[$x]);
+                    if (strlen($selected_dir_list)){
+                        $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                        if (count($selected_dir_list)) {
+                            for($x=0;$x<count($selected_dir_list);$x++) {
+                                $selected_dir_list[$x] = trim($selected_dir_list[$x]);
+                                if (strlen($selected_dir_list[$x])) $zipfile->add_files($selected_dir_list[$x]);
                             }
                         }
                     }
@@ -2153,7 +2402,7 @@ function frame3(){
             }
             break;
             case 72: // decompress arq
-            if (strlen($cmd_arg)>0){
+            if (strlen($cmd_arg)){
                 if (file_exists($dir_atual.$cmd_arg)){
                     $zipfile=false;
                     if (strstr($cmd_arg,".zip")) zip_extract();
@@ -2170,18 +2419,20 @@ function frame3(){
             }
             break;
             case 8: // delete arq/dir
-            if (strlen($cmd_arg)>0){
+            if (strlen($cmd_arg)){
                 if (file_exists($dir_atual.$cmd_arg)) total_delete($dir_atual.$cmd_arg);
                 if (is_dir($dir_atual.$cmd_arg)) reloadframe("parent",2);
             }
             break;
             case 9: // CHMOD
-            if((strlen($chmod_arg) == 4)&&(strlen($dir_atual)>0)){
+            if((strlen($chmod_arg) == 4)&&(strlen($dir_atual))){
                 if ($chmod_arg[0]=="1") $chmod_arg = "0".$chmod_arg;
                 else $chmod_arg = "0".substr($chmod_arg,strlen($chmod_arg)-3);
                 $new_mod = octdec($chmod_arg);
-                if (count($dir_file_list)>0) for($x=0;$x<count($dir_file_list);$x++) chmod($dir_atual.$dir_file_list[$x],$new_mod);
-                if (count($dir_dir_list)>0) for($x=0;$x<count($dir_dir_list);$x++) chmod($dir_atual.$dir_dir_list[$x],$new_mod);
+                $selected_file_list = explode("<|*|>",$selected_file_list);
+                if (count($selected_file_list)) for($x=0;$x<count($selected_file_list);$x++) @chmod($dir_atual.$selected_file_list[$x],$new_mod);
+                $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                if (count($selected_dir_list)) for($x=0;$x<count($selected_dir_list);$x++) @chmod($dir_atual.$selected_dir_list[$x],$new_mod);
             }
             break;
         }
@@ -2190,30 +2441,31 @@ function frame3(){
     echo "</body>\n</html>";
 }
 function frame2(){
-    global $expanded_tree,$open_dir;
-    if (!isset($expanded_tree)) $expanded_tree = "";
-    if (strlen($open_dir)>0){
-        if (strstr($expanded_tree,$open_dir)) $expanded_tree = str_replace(":".$open_dir,"",$expanded_tree);
-        else $expanded_tree .= ":".$open_dir;
-        setcookie("expanded_tree", $expanded_tree , 0 , "/");
+    global $expanded_dir_list,$ec_dir;
+    if (!isset($expanded_dir_list)) $expanded_dir_list = "";
+    if (strlen($ec_dir)){
+        if (strstr($expanded_dir_list,":".$ec_dir)) $expanded_dir_list = str_replace(":".$ec_dir,"",$expanded_dir_list);
+        else $expanded_dir_list .= ":".$ec_dir;
+        setcookie("expanded_dir_list", $expanded_dir_list , 0 , "/");
     }
     show_tree();
 }
 function frameset(){
+    global $path_info;
     html_header();
     echo "
     <frameset cols=\"300,*\" framespacing=\"0\">
         <frameset rows=\"0,*\" framespacing=\"0\" frameborder=no>
-            <frame src=\"index.php?frame=1\" name=frame1 border=\"0\" marginwidth=\"0\" marginheight=\"0\" scrolling=no>
-            <frame src=\"index.php?frame=2\" name=frame2 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
+            <frame src=\"".$path_info["basename"]."?frame=1\" name=frame1 border=\"0\" marginwidth=\"0\" marginheight=\"0\" scrolling=no>
+            <frame src=\"".$path_info["basename"]."?frame=2\" name=frame2 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
         </frameset>
-        <frame src=\"index.php?frame=3\" name=frame3 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
+        <frame src=\"".$path_info["basename"]."?frame=3\" name=frame3 border=\"0\" marginwidth=\"0\" marginheight=\"0\">
     </frameset>
     ";
     echo "</html>";
 }
 // +--------------------------------------------------
-// | Opensource Contributions
+// | Open Source Contributions
 // +--------------------------------------------------
  /*-------------------------------------------------
  | TAR/GZIP/BZIP2/ZIP ARCHIVE CLASSES 2.0
@@ -2410,6 +2662,7 @@ class archive
         }
         unset($this->exclude,$this->storeonly);
     }
+
 
     function add_files($list)
     {
@@ -2682,6 +2935,7 @@ class tar_file extends archive
         chdir($pwd);
 
         return 1;
+
     }
 
     function extract_files()
@@ -2916,7 +3170,6 @@ class zip_file extends archive
             {
                 continue;
             }
-
             $translate =  array('Ç'=>pack("C",128),'ü'=>pack("C",129),'é'=>pack("C",130),'â'=>pack("C",131),'ä'=>pack("C",132),
                                 'à'=>pack("C",133),'å'=>pack("C",134),'ç'=>pack("C",135),'ê'=>pack("C",136),'ë'=>pack("C",137),
                                 'è'=>pack("C",138),'ï'=>pack("C",139),'î'=>pack("C",140),'ì'=>pack("C",141),'Ä'=>pack("C",142),
