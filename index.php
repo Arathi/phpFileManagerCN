@@ -1,14 +1,14 @@
 <?
-//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:1096651858;s:7:"version";s:5:"0.9.2";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:1096733048;s:7:"version";s:5:"0.9.3";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
  +--------------------------------------------------
- | phpFileManager 0.9.2
+ | phpFileManager 0.9.3
  | By Fabrício Seger Kolling
  | Copyright (c) 2004 Fabrício Seger Kolling
  | E-mail: dulldusk@nho.com.br
  | URL: http://phpfm.sf.net
- | Last Changed: 2004-09-01
+ | Last Changed: 2004-09-02
  +--------------------------------------------------
  | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
@@ -151,7 +151,7 @@ class config {
             'error_reporting'=>'',
             'fm_root'=>'',
             'cookie_cache_time'=>time()+60*60*24*30, // 30 Dias
-            'version'=>'0.9.2'
+            'version'=>'0.9.3'
             );
         $data = false;
         $this->filename = $script_filename;
@@ -1119,7 +1119,7 @@ function dir_list_form() {
         }
         $out .= "
         // Select/Unselect Rows OnClick/OnMouseOver
-        var lastRows = new Array(0,0);
+        var lastRows = new Array(null,null);
         function selectEntry(Row, Action){
             var MarkColor = '#".$fm_color['Mark']."';
             var Cells = Row.getElementsByTagName('td');
@@ -1137,16 +1137,18 @@ function dir_list_form() {
                                 }
                             }
                             // Change the last Row when you change the movement orientation
-                            var LastRowID = lastRows[0].id;
-                            var LastRowDefaultColor;
-                            if (entry_list[LastRowID].type == 'dir') LastRowDefaultColor = '#".$fm_color['Dir']."';
-                            else LastRowDefaultColor = '#".$fm_color['File']."';
-                            if (Row.id == lastRows[1].id){
-                                var LastRowCells = lastRows[0].getElementsByTagName('td');
-                                if (unselect(entry_list[LastRowID])) {
-                                    for (var c=0; c < ".(integer)$highlight_cols."; c++) {
-                                        if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
-                                        else LastRowCells[c].style.backgroundColor = LastRowDefaultColor;
+                            if (lastRows[0] != null && lastRows[1] != null){
+                                var LastRowID = lastRows[0].id;
+                                var LastRowDefaultColor;
+                                if (entry_list[LastRowID].type == 'dir') LastRowDefaultColor = '#".$fm_color['Dir']."';
+                                else LastRowDefaultColor = '#".$fm_color['File']."';
+                                if (Row.id == lastRows[1].id){
+                                    var LastRowCells = lastRows[0].getElementsByTagName('td');
+                                    if (unselect(entry_list[LastRowID])) {
+                                        for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                            if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                            else LastRowCells[c].style.backgroundColor = LastRowDefaultColor;
+                                        }
                                     }
                                 }
                             }
@@ -1158,13 +1160,15 @@ function dir_list_form() {
                                 }
                             }
                             // Change the last Row when you change the movement orientation
-                            var LastRowID = lastRows[0].id;
-                            if (Row.id == lastRows[1].id){
-                                var LastRowCells = lastRows[0].getElementsByTagName('td');
-                                if (select(entry_list[LastRowID])) {
-                                    for (var c=0; c < ".(integer)$highlight_cols."; c++) {
-                                        if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
-                                        else LastRowCells[c].style.backgroundColor = MarkColor;
+                            if (lastRows[0] != null && lastRows[1] != null){
+                                var LastRowID = lastRows[0].id;
+                                if (Row.id == lastRows[1].id){
+                                    var LastRowCells = lastRows[0].getElementsByTagName('td');
+                                    if (select(entry_list[LastRowID])) {
+                                        for (var c=0; c < ".(integer)$highlight_cols."; c++) {
+                                            if (c == 0 && entry_list[LastRowID].type=='file' && !entry_list[LastRowID].selected) LastRowCells[c].style.backgroundColor = '#".$fm_color['FileFirstCell']."';
+                                            else LastRowCells[c].style.backgroundColor = MarkColor;
+                                        }
                                     }
                                 }
                             }
@@ -1211,7 +1215,7 @@ function dir_list_form() {
         }
         // Using same function and a ternary operator couses bug on double click
         function switch_flag_on(e) {
-            lastRows[0] = lastRows[1] = 0;
+            lastRows[0] = lastRows[1] = null;
             if (is.ie){
                 multipleSelection = (event.button == 1);
             } else {
@@ -1348,7 +1352,7 @@ function dir_list_form() {
         }
         function config(){
                 var w = 600;
-                var h = 370;
+                var h = 400;
                 window.open('".$path_info["basename"]."?action=2', 'win_config', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
         }
         function server_info(arg){
@@ -1891,7 +1895,7 @@ function view(){
         if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
         // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
         $url .= str_replace($doc_root,"",$dir_atual).$filename;
-		echo "
+        echo "
         document.location.href='$url';";
     } else {
         echo "
@@ -2057,7 +2061,7 @@ function config_form(){
             var h = 600;
             window.open(url, '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=yes,toolbar=yes,menubar=yes,location=yes');
         }
-        window.moveTo((window.screen.width-600)/2,((window.screen.height-240)/2)-20);
+        window.moveTo((window.screen.width-600)/2,((window.screen.height-400)/2)-20);
         window.focus();
     //-->
     </script>
