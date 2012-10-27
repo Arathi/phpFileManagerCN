@@ -1,14 +1,14 @@
 <?php
-//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.4";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.5";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
  +--------------------------------------------------
- | phpFileManager 0.9.4
+ | phpFileManager 0.9.5
  | By Fabricio Seger Kolling
  | Copyright (c) 2004-2012 Fabricio Seger Kolling
  | E-mail: dulldusk@gmail.com
  | URL: http://phpfm.sf.net
- | Last Changed: 2012-10-26
+ | Last Changed: 2012-10-27
  +--------------------------------------------------
  | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
@@ -43,12 +43,26 @@
 */
 // +--------------------------------------------------
 // | Header and Globals
-// +--------------------------------------------------
+// +--------------------------------------------------	
+	$charset = "UTF-8";
+    //@setlocale(LC_CTYPE, 'C');
     header("Pragma: no-cache");
     header("Cache-Control: no-store");
-    foreach ($_GET as $key => $val) $$key=html_dencode($val);
-    foreach ($_POST as $key => $val) $$key=html_dencode($val);
-    foreach ($_COOKIE as $key => $val) $$key=html_dencode($val);
+	header("Content-Type: text/html; charset=".$charset);
+	//@ini_set('default_charset', $charset);
+    if (@get_magic_quotes_gpc()) {
+        function stripslashes_deep($value){
+            return is_array($value)? array_map('stripslashes_deep', $value):html_decode($value);
+        }
+        $_POST = array_map('stripslashes_deep', $_POST);
+        $_GET = array_map('stripslashes_deep', $_GET);
+        $_COOKIE = array_map('stripslashes_deep', $_COOKIE);
+        $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
+    }
+	// Register Globals
+    foreach ($_GET as $key => $val) $$key=$val;
+    foreach ($_POST as $key => $val) $$key=$val;
+    foreach ($_COOKIE as $key => $val) $$key=$val;
     if (empty($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["REMOTE_ADDR"]; //nao usa proxy
     else $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; //usa proxy
 	if ($ip == "::1") $ip = "";
@@ -73,7 +87,7 @@
     if (!isset($current_dir)){
         $current_dir = $path_info["dirname"]."/";
         if (!$islinux) $current_dir = ucfirst($current_dir);
-        @chmod($current_dir,0777);
+        //@chmod($current_dir,0777);
     } else $current_dir = format_path($current_dir);
     $is_reachable = (stristr($current_dir,$doc_root)!==false);
     // Auto Expand Local Path
@@ -106,7 +120,7 @@
     }
     $fm_color['Bg'] = "EEEEEE";
     $fm_color['Text'] = "000000";
-    $fm_color['Link'] = "F87C01";
+    $fm_color['Link'] = "0A77F7";
     $fm_color['Entry'] = "FFFFFF";
     $fm_color['Over'] = "C0EBFD";
     $fm_color['Mark'] = "A7D2E4";
@@ -158,7 +172,7 @@ class config {
             'error_reporting'=>'',
             'fm_root'=>'',
             'cookie_cache_time'=>60*60*24*30, // 30 Days
-            'version'=>'0.9.4'
+            'version'=>'0.9.5'
             );
         $data = false;
         $this->filename = $fm_self;
@@ -193,7 +207,7 @@ class config {
 function et($tag){
     global $lang;
 
-    // English (by Fabricio Seger Kolling)
+    // English - by Fabricio Seger Kolling
     $en['Version'] = 'Version';
     $en['DocRoot'] = 'Document Root';
     $en['FLRoot'] = 'File Manager Root';
@@ -302,8 +316,8 @@ function et($tag){
     $en['Seconds'] = 'sec';
     $en['ErrorReport'] = 'Error Reporting';
 
-    // Portuguese by (Fabricio Seger Kolling)
-    $pt['Version'] = 'Vers�o';
+    // Portuguese by - Fabricio Seger Kolling
+    $pt['Version'] = 'Versão';
     $pt['DocRoot'] = 'Document Root';
     $pt['FLRoot'] = 'File Manager Root';
     $pt['Name'] = 'Nome';
@@ -311,7 +325,7 @@ function et($tag){
     $pt['Enter'] = 'Entrar';
     $pt['Send'] = 'Enviar';
     $pt['Refresh'] = 'Atualizar';
-    $pt['SaveConfig'] = 'Salvar Configura��es';
+    $pt['SaveConfig'] = 'Salvar Configurações';
     $pt['SavePass'] = 'Salvar Senha';
     $pt['SaveFile'] = 'Salvar Arquivo';
     $pt['Save'] = 'Salvar';
@@ -327,13 +341,13 @@ function et($tag){
     $pt['Move'] = 'Mover';
     $pt['Copy'] = 'Copiar';
     $pt['ServerInfo'] = 'Server Info';
-    $pt['CreateDir'] = 'Criar Diret�rio';
+    $pt['CreateDir'] = 'Criar Diretório';
     $pt['CreateArq'] = 'Criar Arquivo';
     $pt['ExecCmd'] = 'Executar Comando';
     $pt['Upload'] = 'Upload';
     $pt['UploadEnd'] = 'Upload Terminado';
     $pt['Perm'] = 'Perm';
-    $pt['Perms'] = 'Permiss�es';
+    $pt['Perms'] = 'Permissões';
     $pt['Owner'] = 'Dono';
     $pt['Group'] = 'Grupo';
     $pt['Other'] = 'Outros';
@@ -354,50 +368,50 @@ function et($tag){
     $pt['Dir_s'] = 'diretorio(s)';
     $pt['To'] = 'para';
     $pt['Destination'] = 'Destino';
-    $pt['Configurations'] = 'Configura��es';
+    $pt['Configurations'] = 'Configurações';
     $pt['JSError'] = 'Erro de JavaScript';
-    $pt['NoSel'] = 'N�o h� itens selecionados';
-    $pt['SelDir'] = 'Selecione o diret�rio de destino na �rvore a esquerda';
-    $pt['TypeDir'] = 'Digite o nome do diret�rio';
+    $pt['NoSel'] = 'Não há itens selecionados';
+    $pt['SelDir'] = 'Selecione o diretório de destino na árvore a esquerda';
+    $pt['TypeDir'] = 'Digite o nome do diretório';
     $pt['TypeArq'] = 'Digite o nome do arquivo';
     $pt['TypeCmd'] = 'Digite o commando';
-    $pt['TypeArqComp'] = 'Digite o nome do arquivo.\\nA extens�o determina o tipo de compacta��o.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
+    $pt['TypeArqComp'] = 'Digite o nome do arquivo.\\nA extensão determina o tipo de compactação.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
     $pt['RemSel'] = 'APAGAR itens selecionados';
-    $pt['NoDestDir'] = 'N�o h� um diret�rio de destino selecionado';
-    $pt['DestEqOrig'] = 'Diret�rio de origem e destino iguais';
-    $pt['InvalidDest'] = 'Diret�rio de destino inv�lido';
-    $pt['NoNewPerm'] = 'Nova permiss�o n�o foi setada';
+    $pt['NoDestDir'] = 'Não há um diretório de destino selecionado';
+    $pt['DestEqOrig'] = 'Diretório de origem e destino iguais';
+    $pt['InvalidDest'] = 'Diretório de destino inválido';
+    $pt['NoNewPerm'] = 'Nova permissão não foi setada';
     $pt['CopyTo'] = 'COPIAR para';
     $pt['MoveTo'] = 'MOVER para';
-    $pt['AlterPermTo'] = 'ALTERAR PERMISS�ES para';
+    $pt['AlterPermTo'] = 'ALTERAR PERMISSÕES para';
     $pt['ConfExec'] = 'Confirma EXECUTAR';
     $pt['ConfRem'] = 'Confirma APAGAR';
-    $pt['EmptyDir'] = 'Diret�rio vazio';
+    $pt['EmptyDir'] = 'Diretório vazio';
     $pt['IOError'] = 'Erro de E/S';
     $pt['FileMan'] = 'PHP File Manager';
     $pt['TypePass'] = 'Digite a senha';
-    $pt['InvPass'] = 'Senha Inv�lida';
+    $pt['InvPass'] = 'Senha Inválida';
     $pt['ReadDenied'] = 'Acesso de leitura negado';
-    $pt['FileNotFound'] = 'Arquivo n�o encontrado';
+    $pt['FileNotFound'] = 'Arquivo não encontrado';
     $pt['AutoClose'] = 'Fechar Automaticamente';
     $pt['OutDocRoot'] = 'Arquivo fora do DOCUMENT_ROOT';
-    $pt['NoCmd'] = 'Erro: Comando n�o informado';
-    $pt['ConfTrySave'] = 'Arquivo sem permiss�o de escrita.\\nTentar salvar assim mesmo';
-    $pt['ConfSaved'] = 'Configura��es salvas';
+    $pt['NoCmd'] = 'Erro: Comando não informado';
+    $pt['ConfTrySave'] = 'Arquivo sem permissão de escrita.\\nTentar salvar assim mesmo';
+    $pt['ConfSaved'] = 'Configurações salvas';
     $pt['PassSaved'] = 'Senha salva';
-    $pt['FileDirExists'] = 'Arquivo ou diret�rio j� existe';
-    $pt['NoPhpinfo'] = 'Fun��o phpinfo desabilitada';
+    $pt['FileDirExists'] = 'Arquivo ou diretório já existe';
+    $pt['NoPhpinfo'] = 'Função phpinfo desabilitada';
     $pt['NoReturn'] = 'sem retorno';
     $pt['FileSent'] = 'Arquivo enviado';
-    $pt['SpaceLimReached'] = 'Limite de espa�o alcan�ado';
-    $pt['InvExt'] = 'Extens�o inv�lida';
-    $pt['FileNoOverw'] = 'Arquivo n�o pode ser sobreescrito';
+    $pt['SpaceLimReached'] = 'Limite de espaço alcançado';
+    $pt['InvExt'] = 'Extensão inválida';
+    $pt['FileNoOverw'] = 'Arquivo não pode ser sobreescrito';
     $pt['FileOverw'] = 'Arquivo sobreescrito';
     $pt['FileIgnored'] = 'Arquivo omitido';
-    $pt['ChkVer'] = 'Verificar sf.net por nova vers�o';
-    $pt['ChkVerAvailable'] = 'Nova vers�o, clique aqui para iniciar download!!';
-    $pt['ChkVerNotAvailable'] = 'N�o h� nova vers�o dispon�vel :(';
-    $pt['ChkVerError'] = 'Erro de conex�o.';
+    $pt['ChkVer'] = 'Verificar sf.net por nova versão';
+    $pt['ChkVerAvailable'] = 'Nova versão, clique aqui para iniciar download!!';
+    $pt['ChkVerNotAvailable'] = 'Não há nova versão disponível :(';
+    $pt['ChkVerError'] = 'Erro de conexão.';
     $pt['Website'] = 'Website';
     $pt['SendingForm'] = 'Enviando arquivos, aguarde';
     $pt['NoFileSel'] = 'Nenhum arquivo selecionado';
@@ -406,13 +420,13 @@ function et($tag){
     $pt['SelInverse'] = 'Inverso';
     $pt['Selected_s'] = 'selecionado(s)';
     $pt['Total'] = 'total';
-    $pt['Partition'] = 'Parti��o';
-    $pt['RenderTime'] = 'Tempo para gerar esta p�gina';
+    $pt['Partition'] = 'Partição';
+    $pt['RenderTime'] = 'Tempo para gerar esta página';
     $pt['Seconds'] = 'seg';
     $pt['ErrorReport'] = 'Error Reporting';
 
-	// Spanish by (Sh Studios)
-    $es['Version'] = 'Versi�n';
+	// Spanish - by Sh Studios
+    $es['Version'] = 'Versión';
     $es['DocRoot'] = 'Raiz del programa';
     $es['FLRoot'] = 'Raiz del administrador de archivos';
     $es['Name'] = 'Nombre';
@@ -421,7 +435,7 @@ function et($tag){
     $es['Send'] = 'Enviar';
     $es['Refresh'] = 'Refrescar';
     $es['SaveConfig'] = 'Guardar configuraciones';
-    $es['SavePass'] = 'Cuardar Contrase�a';
+    $es['SavePass'] = 'Cuardar Contraseña';
     $es['SaveFile'] = 'Guardar Archivo';
     $es['Save'] = 'Guardar';
     $es['Leave'] = 'Salir';
@@ -446,7 +460,7 @@ function et($tag){
     $es['Owner'] = 'Propietario';
     $es['Group'] = 'Grupo';
     $es['Other'] = 'Otro';
-    $es['Size'] = 'Tama�o';
+    $es['Size'] = 'Tamaño';
     $es['Date'] = 'Fecha';
     $es['Type'] = 'Tipo';
     $es['Free'] = 'libre';
@@ -456,7 +470,7 @@ function et($tag){
     $es['Exec'] = 'Ejecutar';
     $es['Apply'] = 'Aplicar';
     $es['StickyBit'] = 'Sticky Bit';
-    $es['Pass'] = 'Contrase�a';
+    $es['Pass'] = 'Contraseña';
     $es['Lang'] = 'Lenguage';
     $es['File'] = 'Archivos';
     $es['File_s'] = 'archivo(s)';
@@ -484,8 +498,8 @@ function et($tag){
     $es['EmptyDir'] = 'Directorio Vacio';
     $es['IOError'] = 'Error I/O';
     $es['FileMan'] = 'PHP File Manager';
-    $es['TypePass'] = 'Escriba la contrase�a';
-    $es['InvPass'] = 'Contrase�a invalida';
+    $es['TypePass'] = 'Escriba la contraseña';
+    $es['InvPass'] = 'Contraseña invalida';
     $es['ReadDenied'] = 'Acceso de lectura denegado';
     $es['FileNotFound'] = 'Archivo no encontrado';
     $es['AutoClose'] = 'Cerrar al completar';
@@ -493,7 +507,7 @@ function et($tag){
     $es['NoCmd'] = 'Error: No se ha escrito ningun comando';
     $es['ConfTrySave'] = 'Archivo sin permisos de escritura.\\nIntente guardar en otro lugar';
     $es['ConfSaved'] = 'Configuracion Guardada';
-    $es['PassSaved'] = 'Contrase�a guardada';
+    $es['PassSaved'] = 'Contraseña guardada';
     $es['FileDirExists'] = 'Archivo o directorio ya existente';
     $es['NoPhpinfo'] = 'Funcion phpinfo() inhabilitada';
     $es['NoReturn'] = 'sin retorno';
@@ -520,7 +534,107 @@ function et($tag){
     $es['Seconds'] = 'seg';
     $es['ErrorReport'] = 'Reporte de error';
 
-    // German (by Guido Ogrzal)
+	// Korean - by Airplanez
+    $kr['Version'] = '버전';
+    $kr['DocRoot'] = '웹서버 루트';
+    $kr['FLRoot'] = '파일 매니저 루트';
+    $kr['Name'] = '이름';
+    $kr['Enter'] = '입력';
+    $kr['Send'] = '전송';
+    $kr['Refresh'] = '새로고침';
+    $kr['SaveConfig'] = '환경 저장';
+    $kr['SavePass'] = '비밀번호 저장';
+    $kr['SaveFile'] = '파일 저장';
+    $kr['Save'] = '저장';
+    $kr['Leave'] = '나가기';
+    $kr['Edit'] = '수정';
+    $kr['View'] = '보기';
+    $kr['Config'] = '환경';
+    $kr['Ren'] = '이름바꾸기';
+    $kr['Rem'] = '삭제';
+    $kr['Compress'] = '압축하기';
+    $kr['Decompress'] = '압축풀기';
+    $kr['ResolveIDs'] = '소유자';
+    $kr['Move'] = '이동';
+    $kr['Copy'] = '복사';
+    $kr['ServerInfo'] = '서버 정보';
+    $kr['CreateDir'] = '디렉토리 생성';
+    $kr['CreateArq'] = '파일 생성';
+    $kr['ExecCmd'] = '명령 실행';
+    $kr['Upload'] = '업로드';
+    $kr['UploadEnd'] = '업로드가 완료되었습니다.';
+    $kr['Perm'] = '권한';
+    $kr['Perms'] = '권한';
+    $kr['Owner'] = '소유자';
+    $kr['Group'] = '그룹';
+    $kr['Other'] = '모든사용자';
+    $kr['Size'] = '크기';
+    $kr['Date'] = '날짜';
+    $kr['Type'] = '종류';
+    $kr['Free'] = '여유';
+    $kr['Shell'] = '쉘';
+    $kr['Read'] = '읽기';
+    $kr['Write'] = '쓰기';
+    $kr['Exec'] = '실행';
+    $kr['Apply'] = '적용';
+    $kr['StickyBit'] = '스티키 비트';
+    $kr['Pass'] = '비밀번호';
+    $kr['Lang'] = '언어';
+    $kr['File'] = '파일';
+    $kr['File_s'] = '파일';
+    $kr['To'] = '으로';
+    $kr['Destination'] = '대상';
+    $kr['Configurations'] = '환경';
+    $kr['JSError'] = '자바스크립트 오류';
+    $kr['NoSel'] = '선택된 것이 없습니다';
+    $kr['SelDir'] = '왼쪽리스트에서 대상 디렉토리를 선택하세요';
+    $kr['TypeDir'] = '디렉토리명을 입력하세요';
+    $kr['TypeArq'] = '파일명을 입력하세요';
+    $kr['TypeCmd'] = '명령을 입력하세요';
+    $kr['TypeArqComp'] = '파일명을 입력하세요.\\n확장자에 따라 압축형식이 정해집니다.\\n예:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
+    $kr['RemSel'] = '선택된 것을 삭제했습니다';
+    $kr['NoDestDir'] = '선택된 대상 디렉토리가 없습니다.';
+    $kr['DestEqOrig'] = '원래 디렉토리와 대상 디렉토리가 같습니다';
+    $kr['NoNewPerm'] = '새로운 권한이 설정되지 않았습니다';
+    $kr['CopyTo'] = '여기에 복사';
+    $kr['MoveTo'] = '여기로 이동';
+    $kr['AlterPermTo'] = '으로 권한변경';
+    $kr['ConfExec'] = '실행 확인';
+    $kr['ConfRem'] = '삭제 확인';
+    $kr['EmptyDir'] = '빈 디렉토리';
+    $kr['IOError'] = '입/출력 오류';
+    $kr['FileMan'] = 'PHP 파일 매니저';
+    $kr['TypePass'] = '비밀번호를 입력하세요';
+    $kr['InvPass'] = '비밀번호가 틀립니다';
+    $kr['ReadDenied'] = '읽기가 거부되었습니다';
+    $kr['FileNotFound'] = '파일이 없습니다';
+    $kr['AutoClose'] = '완료후 닫기';
+    $kr['OutDocRoot'] = 'DOCUMENT_ROOT 이내의 파일이 아닙니다';
+    $kr['NoCmd'] = '오류: 명령이 실행되지 않았습니다';
+    $kr['ConfTrySave'] = '파일에 쓰기 권한이 없습니다.\\n그래도 저장하시겠습니까';
+    $kr['ConfSaved'] = '환경이 저장되었습니다';
+    $kr['PassSaved'] = '비밀번호 저장';
+    $kr['FileDirExists'] = '파일 또는 디렉토리가 이미 존재합니다';
+    $kr['NoPhpinfo'] = 'PHPINFO()를 사용할수 없습니다';
+    $kr['NoReturn'] = '반환값 없음';
+    $kr['FileSent'] = '파일 전송';
+    $kr['SpaceLimReached'] = '저장공가 여유가 없습니다';
+    $kr['InvExt'] = '유효하지 않은 확장자';
+    $kr['FileNoOverw'] = '파일을 덮어 쓸수 없습니다';
+    $kr['FileOverw'] = '파일을 덮어 썼습니다';
+    $kr['FileIgnored'] = '파일이 무시되었습니다';
+    $kr['ChkVer'] = 'sf.net 에서 새버전 확인';
+    $kr['ChkVerAvailable'] = '새로운 버전이 있습니다. 다운받으려면 클릭하세요!!';
+    $kr['ChkVerNotAvailable'] = '새로운 버전이 없습니다. :(';
+    $kr['ChkVerError'] = '연결 오류';
+    $kr['Website'] = '웹사이트';
+    $kr['SendingForm'] = '파일을 전송중입니다. 기다리세요';
+    $kr['NoFileSel'] = '파일이 선택되지 않았습니다';
+    $kr['SelAll'] = '모든';
+    $kr['SelNone'] = '제로';
+    $kr['SelInverse'] = '역';
+
+    // German - by Guido Ogrzal
     $de1['Version'] = 'Version';
     $de1['DocRoot'] = 'Dokument Wurzelverzeichnis';
     $de1['FLRoot'] = 'Dateimanager Wurzelverzeichnis';
@@ -538,7 +652,7 @@ function et($tag){
     $de1['View'] = 'Ansehen';
     $de1['Config'] = 'Konfigurieren';
     $de1['Ren'] = 'Umbenennen';
-    $de1['Rem'] = 'L�schen';
+    $de1['Rem'] = 'Löschen';
     $de1['Compress'] = 'Komprimieren';
     $de1['Decompress'] = 'Dekomprimieren';
     $de1['ResolveIDs'] = 'Resolve IDs';
@@ -555,15 +669,15 @@ function et($tag){
     $de1['Owner'] = 'Besitzer';
     $de1['Group'] = 'Gruppe';
     $de1['Other'] = 'Andere';
-    $de1['Size'] = 'Gr��e';
+    $de1['Size'] = 'Größe';
     $de1['Date'] = 'Datum';
     $de1['Type'] = 'Typ';
     $de1['Free'] = 'frei';
     $de1['Shell'] = 'Shell';
     $de1['Read'] = 'Lesen';
     $de1['Write'] = 'Schreiben';
-    $de1['Exec'] = 'Ausf�hren';
-    $de1['Apply'] = 'Best�tigen';
+    $de1['Exec'] = 'Ausführen';
+    $de1['Apply'] = 'Bestätigen';
     $de1['StickyBit'] = 'Sticky Bit';
     $de1['Pass'] = 'Passwort';
     $de1['Lang'] = 'Sprache';
@@ -580,40 +694,40 @@ function et($tag){
     $de1['TypeArq'] = 'Trage den Dateinamen ein';
     $de1['TypeCmd'] = 'Gib das Kommando ein';
     $de1['TypeArqComp'] = 'Trage den Dateinamen ein.\\nDie Dateierweiterung wird den Kompressiontyp bestimmen.\\nBsp.:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
-    $de1['RemSel'] = 'L�SCHE die selektierten Objekte';
+    $de1['RemSel'] = 'LÖSCHE die selektierten Objekte';
     $de1['NoDestDir'] = 'Das selektierte Zielverzeichnis existiert nicht';
-    $de1['DestEqOrig'] = 'Quell- und Zielverzeichnis stimmen �berein';
-    $de1['InvalidDest'] = 'Zielverzeichnis ist ung�ltig';
+    $de1['DestEqOrig'] = 'Quell- und Zielverzeichnis stimmen überein';
+    $de1['InvalidDest'] = 'Zielverzeichnis ist ungültig';
     $de1['NoNewPerm'] = 'Neue Zugriffserlaubnis konnte nicht gesetzt werden';
     $de1['CopyTo'] = 'KOPIERE nach';
     $de1['MoveTo'] = 'VERSCHIEBE nach';
-    $de1['AlterPermTo'] = '�NDERE ZUGRIFFSERLAUBSNIS in';
-    $de1['ConfExec'] = 'Best�tige AUSF�HRUNG';
-    $de1['ConfRem'] = 'Best�tige L�SCHEN';
+    $de1['AlterPermTo'] = 'ÄNDERE ZUGRIFFSERLAUBSNIS in';
+    $de1['ConfExec'] = 'Bestätige AUSFÜHRUNG';
+    $de1['ConfRem'] = 'Bestätige LÖSCHEN';
     $de1['EmptyDir'] = 'Leeres Verzeichnis';
     $de1['IOError'] = 'Eingabe/Ausgabe-Fehler';
     $de1['FileMan'] = 'PHP File Manager';
     $de1['TypePass'] = 'Trage das Passwort ein';
-    $de1['InvPass'] = 'Ung�ltiges Passwort';
+    $de1['InvPass'] = 'Ungültiges Passwort';
     $de1['ReadDenied'] = 'Lesezugriff verweigert';
     $de1['FileNotFound'] = 'Datei nicht gefunden';
-    $de1['AutoClose'] = 'Schlie�en, wenn fertig';
-    $de1['OutDocRoot'] = 'Datei au�erhalb von DOCUMENT_ROOT';
+    $de1['AutoClose'] = 'Schließen, wenn fertig';
+    $de1['OutDocRoot'] = 'Datei außerhalb von DOCUMENT_ROOT';
     $de1['NoCmd'] = 'Fehler: Es wurde kein Kommando eingetragen';
-    $de1['ConfTrySave'] = 'Keine Schreibberechtigung f�r die Datei.\\nVersuche trotzdem zu speichern';
+    $de1['ConfTrySave'] = 'Keine Schreibberechtigung für die Datei.\\nVersuche trotzdem zu speichern';
     $de1['ConfSaved'] = 'Konfiguration gespeichert';
     $de1['PassSaved'] = 'Passwort gespeichert';
     $de1['FileDirExists'] = 'Datei oder Verzeichnis existiert schon';
     $de1['NoPhpinfo'] = 'Funktion phpinfo ist inaktiv';
-    $de1['NoReturn'] = 'keine R�ckgabe';
+    $de1['NoReturn'] = 'keine Rückgabe';
     $de1['FileSent'] = 'Datei wurde gesendet';
-    $de1['SpaceLimReached'] = 'Verf�gbares Speicherlimit wurde erreicht';
-    $de1['InvExt'] = 'Ung�ltige Dateiendung';
-    $de1['FileNoOverw'] = 'Datei kann nicht �berschrieben werden';
-    $de1['FileOverw'] = 'Datei �berschrieben';
+    $de1['SpaceLimReached'] = 'Verfügbares Speicherlimit wurde erreicht';
+    $de1['InvExt'] = 'Ungültige Dateiendung';
+    $de1['FileNoOverw'] = 'Datei kann nicht überschrieben werden';
+    $de1['FileOverw'] = 'Datei überschrieben';
     $de1['FileIgnored'] = 'Datei ignoriert';
-    $de1['ChkVer'] = 'Pr�fe auf neue Version bei sf.net';
-    $de1['ChkVerAvailable'] = 'Neue Version verf�gbar; klicke hier, um den Download zu starten!!';
+    $de1['ChkVer'] = 'Prüfe auf neue Version bei sf.net';
+    $de1['ChkVerAvailable'] = 'Neue Version verfügbar; klicke hier, um den Download zu starten!!';
     $de1['ChkVerNotAvailable'] = 'Keine neue Version gefunden. :(';
     $de1['ChkVerError'] = 'Verbindungsfehler.';
     $de1['Website'] = 'Webseite';
@@ -629,7 +743,7 @@ function et($tag){
     $de1['Seconds'] = 's';
     $de1['ErrorReport'] = 'Fehlerreport';
 
-    // German (by AXL)
+    // German - by AXL
     $de2['Version'] = 'Version';
     $de2['DocRoot'] = 'Document Stammverzeichnis';
     $de2['FLRoot'] = 'Datei Manager Stammverzeichnis';
@@ -647,16 +761,16 @@ function et($tag){
     $de2['View'] = 'Anzeigen';
     $de2['Config'] = 'Konfigurieren';
     $de2['Ren'] = 'Umb.';
-    $de2['Rem'] = 'L�schen';
+    $de2['Rem'] = 'Löschen';
     $de2['Compress'] = 'Komprimieren';
     $de2['Decompress'] = 'De-Komprimieren';
-    $de2['ResolveIDs'] = 'IDs aufl�sen';
+    $de2['ResolveIDs'] = 'IDs auflösen';
     $de2['Move'] = 'Versch.';
     $de2['Copy'] = 'Kopie';
     $de2['ServerInfo'] = 'Server Info';
     $de2['CreateDir'] = 'Verzeichnis erstellen';
     $de2['CreateArq'] = 'Datei erstellen';
-    $de2['ExecCmd'] = 'Befehl ausf�hren';
+    $de2['ExecCmd'] = 'Befehl ausführen';
     $de2['Upload'] = 'Upload';
     $de2['UploadEnd'] = 'Upload abgeschlossen';
     $de2['Perm'] = 'Rechte';
@@ -664,7 +778,7 @@ function et($tag){
     $de2['Owner'] = 'Besitzer';
     $de2['Group'] = 'Gruppe';
     $de2['Other'] = 'Andere';
-    $de2['Size'] = 'Gr��e';
+    $de2['Size'] = 'Größe';
     $de2['Date'] = 'Datum';
     $de2['Type'] = 'Typ';
     $de2['Free'] = 'frei';
@@ -683,27 +797,27 @@ function et($tag){
     $de2['Destination'] = 'Ziel';
     $de2['Configurations'] = 'Konfigurationen';
     $de2['JSError'] = 'JavaScript Fehler';
-    $de2['NoSel'] = 'Keine Eintr�ge ausgew�hlt';
-    $de2['SelDir'] = 'W�hlen Sie das Zeilverzeichnis im Verzeichnis links';
+    $de2['NoSel'] = 'Keine Einträge ausgewählt';
+    $de2['SelDir'] = 'Wählen Sie das Zeilverzeichnis im Verzeichnis links';
     $de2['TypeDir'] = 'Geben Sie den Verzeichnisnamen ein';
     $de2['TypeArq'] = 'Geben Sie den Dateinamen ein';
     $de2['TypeCmd'] = 'Geben Sie den Befehl ein';
     $de2['TypeArqComp'] = 'Geben Sie den Dateinamen ein.\\nDie Datei-Extension legt den Kopressionstyp fest.\\nBeispiel:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
-    $de2['RemSel'] = 'Ausgew�hlte Dateien L�SCHEN';
+    $de2['RemSel'] = 'Ausgewählte Dateien LÖSCHEN';
     $de2['NoDestDir'] = 'Es wurde kein Zielverzeichnis angegeben';
     $de2['DestEqOrig'] = 'Quell- und Zielverzeichnis sind identisch';
-    $de2['InvalidDest'] = 'Zielverzeichnis ung�ltig';
+    $de2['InvalidDest'] = 'Zielverzeichnis ungültig';
     $de2['NoNewPerm'] = 'Unzureichende Rechte';
     $de2['CopyTo'] = 'KOPIEREN nach';
     $de2['MoveTo'] = 'VERSCHIEBEN nach';
-    $de2['AlterPermTo'] = 'RECHTE �NDERN in';
-    $de2['ConfExec'] = 'Best�tigung AUSF�HREN';
-    $de2['ConfRem'] = 'Best�tigung L�SCHEN';
+    $de2['AlterPermTo'] = 'RECHTE ÄNDERN in';
+    $de2['ConfExec'] = 'Bestätigung AUSFÜHREN';
+    $de2['ConfRem'] = 'Bestätigung LÖSCHEN';
     $de2['EmptyDir'] = 'Leeres Verzeichnis';
     $de2['IOError'] = 'Ein-/Ausgabe-Fehler';
     $de2['FileMan'] = 'PHP File Manager';
     $de2['TypePass'] = 'Bitte geben Sie das Passwort ein';
-    $de2['InvPass'] = 'Ung�ltiges Passwort';
+    $de2['InvPass'] = 'Ungültiges Passwort';
     $de2['ReadDenied'] = 'Leasezugriff verweigert';
     $de2['FileNotFound'] = 'Datei nicht gefunden';
     $de2['AutoClose'] = 'Schliessen nach Beenden';
@@ -714,31 +828,31 @@ function et($tag){
     $de2['PassSaved'] = 'Passwort gespeichert';
     $de2['FileDirExists'] = 'Datei oder Verzeichnis existiert bereits';
     $de2['NoPhpinfo'] = 'Funktion phpinfo ausgeschaltet';
-    $de2['NoReturn'] = 'keine R�ckgabe';
+    $de2['NoReturn'] = 'keine Rückgabe';
     $de2['FileSent'] = 'Datei versandt';
-    $de2['SpaceLimReached'] = 'Plattenplatz ersch�pft';
-    $de2['InvExt'] = 'Ung�ltige datei-Extension';
-    $de2['FileNoOverw'] = 'Datei kann nicht �berschrieben werden';
-    $de2['FileOverw'] = 'Datei �berschrieben';
+    $de2['SpaceLimReached'] = 'Plattenplatz erschöpft';
+    $de2['InvExt'] = 'Ungültige datei-Extension';
+    $de2['FileNoOverw'] = 'Datei kann nicht überschrieben werden';
+    $de2['FileOverw'] = 'Datei überschrieben';
     $de2['FileIgnored'] = 'Datei ignoriert';
-    $de2['ChkVer'] = '�berpr�fe sf.net nach neuer Version';
-    $de2['ChkVerAvailable'] = 'Neue Version. Hier klicken f�r Download!!';
-    $de2['ChkVerNotAvailable'] = 'Keine neue Version verf�gbar. :(';
+    $de2['ChkVer'] = 'Überprüfe sf.net nach neuer Version';
+    $de2['ChkVerAvailable'] = 'Neue Version. Hier klicken für Download!!';
+    $de2['ChkVerNotAvailable'] = 'Keine neue Version verfügbar. :(';
     $de2['ChkVerError'] = 'Verbindungsfehler.';
     $de2['Website'] = 'Webseite';
     $de2['SendingForm'] = 'Sende Dateien, bitte warten';
-    $de2['NoFileSel'] = 'Keine Dateien ausgew�hlt';
+    $de2['NoFileSel'] = 'Keine Dateien ausgewählt';
     $de2['SelAll'] = 'Alle';
     $de2['SelNone'] = 'Keine';
     $de2['SelInverse'] = 'Invers';
-    $de2['Selected_s'] = 'ausgew�hlt';
+    $de2['Selected_s'] = 'ausgewählt';
     $de2['Total'] = 'Total';
     $de2['Partition'] = 'Partition';
     $de2['RenderTime'] = 'Zeit zum Erzeugen der Seite';
     $de2['Seconds'] = 'Sekunden';
     $de2['ErrorReport'] = 'Fehler berichten';
 
-	// German (by Mathias Rothe)
+	// German - by Mathias Rothe
     $de3['Version'] = 'Version';
     $de3['DocRoot'] = 'Dokumenten Root';
     $de3['FLRoot'] = 'Datei Manager Root';
@@ -847,7 +961,7 @@ function et($tag){
     $de3['Seconds'] = 'sec';
     $de3['ErrorReport'] = 'Fehlermeldungen';
 
-    // French (by Jean Bilwes)
+    // French - by Jean Bilwes
     $fr1['Version'] = 'Version';
     $fr1['DocRoot'] = 'Racine des documents';
     $fr1['FLRoot'] = 'Racine du gestionnaire de fichers';
@@ -869,17 +983,17 @@ function et($tag){
     $fr1['Compress'] = 'Compresser';
     $fr1['Decompress'] = 'Decompresser';
     $fr1['ResolveIDs'] = 'Resoudre les IDs';
-    $fr1['Move'] = 'D�placer';
+    $fr1['Move'] = 'Déplacer';
     $fr1['Copy'] = 'Copier';
     $fr1['ServerInfo'] = 'info du sreveur';
-    $fr1['CreateDir'] = 'Cr�er un r�pertoire';
-    $fr1['CreateArq'] = 'Cr�er un fichier';
+    $fr1['CreateDir'] = 'Créer un répertoire';
+    $fr1['CreateArq'] = 'Créer un fichier';
     $fr1['ExecCmd'] = 'Executer une Commande';
-    $fr1['Upload'] = 'T�l�versement(upload)';
-    $fr1['UploadEnd'] = 'T�l�versement Fini';
+    $fr1['Upload'] = 'Téléversement(upload)';
+    $fr1['UploadEnd'] = 'Téléversement Fini';
     $fr1['Perm'] = 'Perm';
     $fr1['Perms'] = 'Permissions';
-    $fr1['Owner'] = 'Propri�taire';
+    $fr1['Owner'] = 'Propriétaire';
     $fr1['Group'] = 'Groupe';
     $fr1['Other'] = 'Autre';
     $fr1['Size'] = 'Taille';
@@ -896,67 +1010,67 @@ function et($tag){
     $fr1['Lang'] = 'Langage';
     $fr1['File'] = 'Fichier';
     $fr1['File_s'] = 'fichier(s)';
-    $fr1['Dir_s'] = 'r�pertoire(s)';
-    $fr1['To'] = '�';
+    $fr1['Dir_s'] = 'répertoire(s)';
+    $fr1['To'] = 'à';
     $fr1['Destination'] = 'Destination';
     $fr1['Configurations'] = 'Configurations';
     $fr1['JSError'] = 'Erreur JavaScript';
-    $fr1['NoSel'] = 'Rien n\'est s�lectionn�';
-    $fr1['SelDir'] = 'Selectionnez le r�pertoire de destination dans le panneau gauche';
-    $fr1['TypeDir'] = 'Entrer le nom du r�pertoire';
+    $fr1['NoSel'] = 'Rien n\'est sélectionné';
+    $fr1['SelDir'] = 'Selectionnez le répertoire de destination dans le panneau gauche';
+    $fr1['TypeDir'] = 'Entrer le nom du répertoire';
     $fr1['TypeArq'] = 'Entrer le nom du fichier';
     $fr1['TypeCmd'] = 'Entrer la commande';
-    $fr1['TypeArqComp'] = 'Entrer le nom du fichier.\\nL\'extension d�finira le type de compression.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
-    $fr1['RemSel'] = 'EFFACER les objets s�lectionn�s';
-    $fr1['NoDestDir'] = 'Aucun r�pertoire de destination n\'est s�lectionn�';
-    $fr1['DestEqOrig'] = 'Les r�pertoires source et destination sont identiques';
-    $fr1['InvalidDest'] = 'Le r�pertoire de destination est invalide';
-    $fr1['NoNewPerm'] = 'Nouvelle permission non �tablie';
+    $fr1['TypeArqComp'] = 'Entrer le nom du fichier.\\nL\'extension définira le type de compression.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
+    $fr1['RemSel'] = 'EFFACER les objets sélectionnés';
+    $fr1['NoDestDir'] = 'Aucun répertoire de destination n\'est sélectionné';
+    $fr1['DestEqOrig'] = 'Les répertoires source et destination sont identiques';
+    $fr1['InvalidDest'] = 'Le répertoire de destination est invalide';
+    $fr1['NoNewPerm'] = 'Nouvelle permission non établie';
     $fr1['CopyTo'] = 'COPIER vers';
     $fr1['MoveTo'] = 'DEPLACER vers';
     $fr1['AlterPermTo'] = 'CHANGER LES PERMISSIONS';
     $fr1['ConfExec'] = 'Confirmer l\'EXECUTION';
     $fr1['ConfRem'] = 'Confirmer la DESTRUCTION';
-    $fr1['EmptyDir'] = 'R�pertoire vide';
+    $fr1['EmptyDir'] = 'Répertoire vide';
     $fr1['IOError'] = 'I/O Error';
     $fr1['FileMan'] = 'PHP File Manager';
     $fr1['TypePass'] = 'Entrer le mot de passe';
     $fr1['InvPass'] = 'Mot de passe invalide';
-    $fr1['ReadDenied'] = 'Droit de lecture refus�';
+    $fr1['ReadDenied'] = 'Droit de lecture refusé';
     $fr1['FileNotFound'] = 'Fichier introuvable';
     $fr1['AutoClose'] = 'Fermer sur fin';
-    $fr1['OutDocRoot'] = 'Fichier au del� de DOCUMENT_ROOT';
-    $fr1['NoCmd'] = 'Erreur: Commande non renseign�e';
-    $fr1['ConfTrySave'] = 'Fichier sans permission d\'�criture.\\nJ\'essaie de l\'enregister';
-    $fr1['ConfSaved'] = 'Configurations enreristr�e';
-    $fr1['PassSaved'] = 'Mot de passe enreristr�';
-    $fr1['FileDirExists'] = 'Le fichier ou le r�pertoire existe d�j�';
-    $fr1['NoPhpinfo'] = 'Function phpinfo d�sactiv�e';
+    $fr1['OutDocRoot'] = 'Fichier au delà de DOCUMENT_ROOT';
+    $fr1['NoCmd'] = 'Erreur: Commande non renseignée';
+    $fr1['ConfTrySave'] = 'Fichier sans permission d\'écriture.\\nJ\'essaie de l\'enregister';
+    $fr1['ConfSaved'] = 'Configurations enreristrée';
+    $fr1['PassSaved'] = 'Mot de passe enreristré';
+    $fr1['FileDirExists'] = 'Le fichier ou le répertoire existe déjà';
+    $fr1['NoPhpinfo'] = 'Function phpinfo désactivée';
     $fr1['NoReturn'] = 'pas de retour';
-    $fr1['FileSent'] = 'Fichier envoy�';
+    $fr1['FileSent'] = 'Fichier envoyé';
     $fr1['SpaceLimReached'] = 'Espace maxi atteint';
     $fr1['InvExt'] = 'Extension invalide';
-    $fr1['FileNoOverw'] = 'Le fichier ne peut pas etre �cras�';
-    $fr1['FileOverw'] = 'Fichier �cras�';
-    $fr1['FileIgnored'] = 'Fichier ignor�';
+    $fr1['FileNoOverw'] = 'Le fichier ne peut pas etre écrasé';
+    $fr1['FileOverw'] = 'Fichier écrasé';
+    $fr1['FileIgnored'] = 'Fichier ignoré';
     $fr1['ChkVer'] = 'Verifier sur sf.net une nouvelle version';
-    $fr1['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour la t�l�chager!!';
+    $fr1['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour la téléchager!!';
     $fr1['ChkVerNotAvailable'] = 'Aucune mise a jour de disponible. :(';
     $fr1['ChkVerError'] = 'Erreur de connection.';
     $fr1['Website'] = 'siteweb';
     $fr1['SendingForm'] = 'Envoi des fichiers en cours, Patienter';
-    $fr1['NoFileSel'] = 'Aucun fichier s�lectionn�';
+    $fr1['NoFileSel'] = 'Aucun fichier sélectionné';
     $fr1['SelAll'] = 'Tous';
     $fr1['SelNone'] = 'Aucun';
     $fr1['SelInverse'] = 'Inverser';
-    $fr1['Selected_s'] = 'selection�';
+    $fr1['Selected_s'] = 'selectioné';
     $fr1['Total'] = 'total';
     $fr1['Partition'] = 'Partition';
     $fr1['RenderTime'] = 'Temps pour afficher cette page';
     $fr1['Seconds'] = 'sec';
     $fr1['ErrorReport'] = 'Rapport d\'erreur';
 
-	// French (by Sharky)
+	// French - by Sharky
     $fr2['Version'] = 'Version';
     $fr2['DocRoot'] = 'Racine document';
     $fr2['FLRoot'] = 'Gestion des fichiers racine';
@@ -964,31 +1078,31 @@ function et($tag){
     $fr2['And'] = 'et';
     $fr2['Enter'] = 'Entrer';
     $fr2['Send'] = 'Envoi';
-    $fr2['Refresh'] = 'Rafra�chir';
+    $fr2['Refresh'] = 'Rafraîchir';
     $fr2['SaveConfig'] = 'Sauver configurations';
     $fr2['SavePass'] = 'Sauver mot de passe';
     $fr2['SaveFile'] = 'Sauver fichier';
     $fr2['Save'] = 'Sauver';
     $fr2['Leave'] = 'Permission';
-    $fr2['Edit'] = '�diter';
+    $fr2['Edit'] = 'Éditer';
     $fr2['View'] = 'Afficher';
     $fr2['Config'] = 'config';
     $fr2['Ren'] = 'Renommer';
     $fr2['Rem'] = 'Effacer';
     $fr2['Compress'] = 'Compresser';
-    $fr2['Decompress'] = 'D�compresser';
-    $fr2['ResolveIDs'] = 'R�soudre ID';
-    $fr2['Move'] = 'D�placer';
+    $fr2['Decompress'] = 'Décompresser';
+    $fr2['ResolveIDs'] = 'Résoudre ID';
+    $fr2['Move'] = 'Déplacer';
     $fr2['Copy'] = 'Copier';
     $fr2['ServerInfo'] = 'Information Serveur';
-    $fr2['CreateDir'] = 'Cr�er un r�pertoire';
-    $fr2['CreateArq'] = 'Cr�er un fichier';
-    $fr2['ExecCmd'] = 'Execut� une commande';
-    $fr2['Upload'] = 'Transf�rer';
-    $fr2['UploadEnd'] = 'Transfert termin�';
+    $fr2['CreateDir'] = 'Créer un répertoire';
+    $fr2['CreateArq'] = 'Créer un fichier';
+    $fr2['ExecCmd'] = 'Executé une commande';
+    $fr2['Upload'] = 'Transférer';
+    $fr2['UploadEnd'] = 'Transfert terminé';
     $fr2['Perm'] = 'Perm';
     $fr2['Perms'] = 'Permissions';
-    $fr2['Owner'] = 'Propri�taire';
+    $fr2['Owner'] = 'Propriétaire';
     $fr2['Group'] = 'Groupe';
     $fr2['Other'] = 'Autre';
     $fr2['Size'] = 'Taille';
@@ -997,7 +1111,7 @@ function et($tag){
     $fr2['Free'] = 'Libre';
     $fr2['Shell'] = 'Shell';
     $fr2['Read'] = 'lecture';
-    $fr2['Write'] = '�criture';
+    $fr2['Write'] = 'écriture';
     $fr2['Exec'] = 'Execute';
     $fr2['Apply'] = 'Appliquer';
     $fr2['StickyBit'] = 'Bit figer';
@@ -1005,67 +1119,67 @@ function et($tag){
     $fr2['Lang'] = 'Language';
     $fr2['File'] = 'Fichier';
     $fr2['File_s'] = 'fichier(s)';
-    $fr2['Dir_s'] = 'r�pertoire(s)';
-    $fr2['To'] = '�';
+    $fr2['Dir_s'] = 'répertoire(s)';
+    $fr2['To'] = 'à';
     $fr2['Destination'] = 'Destination';
     $fr2['Configurations'] = 'Configurations';
     $fr2['JSError'] = 'Erreur JavaScript';
-    $fr2['NoSel'] = 'Il n\'y a pas d\'objets s�lectionn�s';
-    $fr2['SelDir'] = 'S�lectionnez le r�pertoire de destination sur l\'arborescence de gauche';
-    $fr2['TypeDir'] = 'Entrez le nom du r�pertoire';
+    $fr2['NoSel'] = 'Il n\'y a pas d\'objets sélectionnés';
+    $fr2['SelDir'] = 'Sélectionnez le répertoire de destination sur l\'arborescence de gauche';
+    $fr2['TypeDir'] = 'Entrez le nom du répertoire';
     $fr2['TypeArq'] = 'Entrez le nom du fichier';
     $fr2['TypeCmd'] = 'Entrez la commande';
-    $fr2['TypeArqComp'] = 'Entrez le fichier.\\nL\'extension d�finira le type de compression.\\nEx:\\nnom.zip\\nnom.tar\\nnom.bzip\\nnom.gzip';
-    $fr2['RemSel'] = 'EFFACEZ l\'objet s�lectionn�';
-    $fr2['NoDestDir'] = 'Il n\'y a aucun r�pertoire de destination s�lectionn�';
-    $fr2['DestEqOrig'] = 'Origine et r�pertoires de destination sont identique';
-    $fr2['InvalidDest'] = 'R�pertoire de destination est invalide';
-    $fr2['NoNewPerm'] = 'Nouvelle autorisation n\'a pas �t� configur�';
+    $fr2['TypeArqComp'] = 'Entrez le fichier.\\nL\'extension définira le type de compression.\\nEx:\\nnom.zip\\nnom.tar\\nnom.bzip\\nnom.gzip';
+    $fr2['RemSel'] = 'EFFACEZ l\'objet sélectionné';
+    $fr2['NoDestDir'] = 'Il n\'y a aucun répertoire de destination sélectionné';
+    $fr2['DestEqOrig'] = 'Origine et répertoires de destination sont identique';
+    $fr2['InvalidDest'] = 'Répertoire de destination est invalide';
+    $fr2['NoNewPerm'] = 'Nouvelle autorisation n\'a pas été configuré';
     $fr2['CopyTo'] = 'COPIE dans';
-    $fr2['MoveTo'] = 'D�PLACER dans';
+    $fr2['MoveTo'] = 'DÉPLACER dans';
     $fr2['AlterPermTo'] = 'CHANGER PERMISSIONS dans';
     $fr2['ConfExec'] = 'Confirmer EXECUTE';
     $fr2['ConfRem'] = 'Confirmer EFFACER';
-    $fr2['EmptyDir'] = 'R�pertoire vide';
+    $fr2['EmptyDir'] = 'Répertoire vide';
     $fr2['IOError'] = 'I/O Erreur';
     $fr2['FileMan'] = 'Gestion de fichiers PHP';
     $fr2['TypePass'] = 'Entrer le mot de passe';
     $fr2['InvPass'] = 'Mot de passe invalide';
-    $fr2['ReadDenied'] = 'Acc�s en lecture refuser';
-    $fr2['FileNotFound'] = 'Fichier non-trouv�';
+    $fr2['ReadDenied'] = 'Accès en lecture refuser';
+    $fr2['FileNotFound'] = 'Fichier non-trouvé';
     $fr2['AutoClose'] = 'Fermez a la fin';
-    $fr2['OutDocRoot'] = 'Fichier au-del� DOCUMENT_ROOT';
+    $fr2['OutDocRoot'] = 'Fichier au-delà DOCUMENT_ROOT';
     $fr2['NoCmd'] = 'Erreur: Commande inconnue';
-    $fr2['ConfTrySave'] = 'Fichier sans permission d\'�criture.\\nEssayez de sauver';
-    $fr2['ConfSaved'] = 'Configurations sauv�e';
-    $fr2['PassSaved'] = 'Mot de passe sauv�';
-    $fr2['FileDirExists'] = 'Fichier ou r�pertoire d�j� existant';
-    $fr2['NoPhpinfo'] = 'Function phpinfo d�sactiv�';
+    $fr2['ConfTrySave'] = 'Fichier sans permission d\'écriture.\\nEssayez de sauver';
+    $fr2['ConfSaved'] = 'Configurations sauvée';
+    $fr2['PassSaved'] = 'Mot de passe sauvé';
+    $fr2['FileDirExists'] = 'Fichier ou répertoire déjà existant';
+    $fr2['NoPhpinfo'] = 'Function phpinfo désactivé';
     $fr2['NoReturn'] = 'sans retour possible';
-    $fr2['FileSent'] = 'Fichier envoy�';
+    $fr2['FileSent'] = 'Fichier envoyé';
     $fr2['SpaceLimReached'] = 'Limite de d\'espace atteint';
     $fr2['InvExt'] = 'Extension invalide';
-    $fr2['FileNoOverw'] = 'Fichier ne peut pas �tre �cras�';
-    $fr2['FileOverw'] = 'Fichier �cras�';
-    $fr2['FileIgnored'] = 'Fichier ignor�';
+    $fr2['FileNoOverw'] = 'Fichier ne peut pas être écrasé';
+    $fr2['FileOverw'] = 'Fichier écrasé';
+    $fr2['FileIgnored'] = 'Fichier ignoré';
     $fr2['ChkVer'] = 'Check sf.net pour nouvelle version';
-    $fr2['ChkVerAvailable'] = 'Nouvelle version, cliquez ici pour commencer le t�l�chargement!!';
+    $fr2['ChkVerAvailable'] = 'Nouvelle version, cliquez ici pour commencer le téléchargement!!';
     $fr2['ChkVerNotAvailable'] = 'Aucune nouvelle version disponible. :(';
     $fr2['ChkVerError'] = 'Erreur de connection.';
     $fr2['Website'] = 'Site Web';
-    $fr2['SendingForm'] = 'Envoye de fichier, s\'il vous pla�t patientez';
-    $fr2['NoFileSel'] = 'Aucun fichier s�lectionn�';
+    $fr2['SendingForm'] = 'Envoye de fichier, s\'il vous plaît patientez';
+    $fr2['NoFileSel'] = 'Aucun fichier sélectionné';
     $fr2['SelAll'] = 'Tout';
     $fr2['SelNone'] = 'Aucuns';
     $fr2['SelInverse'] = 'Inverser';
-    $fr2['Selected_s'] = 's�lectionn�';
+    $fr2['Selected_s'] = 'sélectionné';
     $fr2['Total'] = 'total';
     $fr2['Partition'] = 'Partition';
     $fr2['RenderTime'] = 'Temps pour afficher la page';
     $fr2['Seconds'] = 'sec';
     $fr2['ErrorReport'] = 'Liste des erreurs';
 
-    // French (by Michel Lainey)
+    // French - by Michel Lainey
     $fr3['Version'] = 'Version';
     $fr3['DocRoot'] = 'Racine Document';
     $fr3['FLRoot'] = 'Racine File Manager';
@@ -1085,19 +1199,19 @@ function et($tag){
     $fr3['Ren'] = 'Renommer';
     $fr3['Rem'] = 'Supprimer';
     $fr3['Compress'] = 'Compresser';
-    $fr3['Decompress'] = 'D�compresser';
+    $fr3['Decompress'] = 'Décompresser';
     $fr3['ResolveIDs'] = 'Resoudre IDs';
-    $fr3['Move'] = 'D�placer';
+    $fr3['Move'] = 'Déplacer';
     $fr3['Copy'] = 'Copier';
     $fr3['ServerInfo'] = 'Server Info';
-    $fr3['CreateDir'] = 'Cr�er R�pertoire';
-    $fr3['CreateArq'] = 'Cr�er Fichier';
+    $fr3['CreateDir'] = 'Créer Répertoire';
+    $fr3['CreateArq'] = 'Créer Fichier';
     $fr3['ExecCmd'] = 'Executer Commande';
     $fr3['Upload'] = 'Upload';
     $fr3['UploadEnd'] = 'Upload Fini';
     $fr3['Perm'] = 'Perm';
     $fr3['Perms'] = 'Permissions';
-    $fr3['Owner'] = 'Propri�taire';
+    $fr3['Owner'] = 'Propriétaire';
     $fr3['Group'] = 'Groupe';
     $fr3['Other'] = 'Autres';
     $fr3['Size'] = 'Taille';
@@ -1114,67 +1228,67 @@ function et($tag){
     $fr3['Lang'] = 'Language';
     $fr3['File'] = 'Fichier';
     $fr3['File_s'] = 'fichier(s)';
-    $fr3['Dir_s'] = 'r�pertoire(s)';
-    $fr3['To'] = '�';
+    $fr3['Dir_s'] = 'répertoire(s)';
+    $fr3['To'] = 'à';
     $fr3['Destination'] = 'Destination';
     $fr3['Configurations'] = 'Configurations';
     $fr3['JSError'] = 'Erreur JavaScript';
-    $fr3['NoSel'] = 'Aucun �l�ment s�lectionn�';
-    $fr3['SelDir'] = "S�lectionner le r�pertoire de destination dans l'arboresence de gauchethe destination directory on the left tree";
-    $fr3['TypeDir'] = 'Indiquer le nom du r�pertoire';
+    $fr3['NoSel'] = 'Aucun élément sélectionné';
+    $fr3['SelDir'] = "Sélectionner le répertoire de destination dans l'arboresence de gauchethe destination directory on the left tree";
+    $fr3['TypeDir'] = 'Indiquer le nom du répertoire';
     $fr3['TypeArq'] = 'Indiquer le nom du fichier';
     $fr3['TypeCmd'] = 'Entrer une commande';
-    $fr3['TypeArqComp'] = "Indiquer le nom du fichier.\\nL'extension d�finira le type de compression.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip";
-    $fr3['RemSel'] = "SUPPRIMER l'�l�ment s�lectionn�";
-    $fr3['NoDestDir'] = "Il n'y a pas de r�pertoire destination s�lectionn�";
-    $fr3['DestEqOrig'] = 'R�pertoire Origine et Destination sont identiques';
-    $fr3['InvalidDest'] = 'Le r�pertoire de destination est invalide';
-    $fr3['NoNewPerm'] = 'Nouvelle permission non appliqu�e';
+    $fr3['TypeArqComp'] = "Indiquer le nom du fichier.\\nL'extension définira le type de compression.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip";
+    $fr3['RemSel'] = "SUPPRIMER l'élément sélectionné";
+    $fr3['NoDestDir'] = "Il n'y a pas de répertoire destination sélectionné";
+    $fr3['DestEqOrig'] = 'Répertoire Origine et Destination sont identiques';
+    $fr3['InvalidDest'] = 'Le répertoire de destination est invalide';
+    $fr3['NoNewPerm'] = 'Nouvelle permission non appliquée';
     $fr3['CopyTo'] = 'COPIER vers';
     $fr3['MoveTo'] = 'DEPLACER vers';
     $fr3['AlterPermTo'] = 'CHANGER LES PERMISSIONS vers';
     $fr3['ConfExec'] = 'Confirmer EXECUTION';
     $fr3['ConfRem'] = 'Confirmer SUPPRESSION';
-    $fr3['EmptyDir'] = 'R�pertoire vide';
-    $fr3['IOError'] = 'Erreur entr�e/sortie';
+    $fr3['EmptyDir'] = 'Répertoire vide';
+    $fr3['IOError'] = 'Erreur entrée/sortie';
     $fr3['FileMan'] = 'PHP File Manager';
     $fr3['TypePass'] = 'Saisir le mot de passe';
     $fr3['InvPass'] = 'Mot de passe invalide';
-    $fr3['ReadDenied'] = 'Acc�s en lecture refus�';
-    $fr3['FileNotFound'] = 'Fichier non trouv�';
+    $fr3['ReadDenied'] = 'Accès en lecture refusé';
+    $fr3['FileNotFound'] = 'Fichier non trouvé';
     $fr3['AutoClose'] = 'Fermeture en fin de traitement';
     $fr3['OutDocRoot'] = 'Fichier en dessous de DOCUMENT_ROOT';
-    $fr3['NoCmd'] = 'Erreur : Commande non renseign�e';
-    $fr3['ConfTrySave'] = "Fichier sans permission d'�criture.\\nTenter de sauver malgr� tout";
-    $fr3['ConfSaved'] = 'Configurations sauvegard�e';
-    $fr3['PassSaved'] = 'Password sauvegard�';
-    $fr3['FileDirExists'] = 'Fichier ou r�pertoire d�j� existant';
-    $fr3['NoPhpinfo'] = 'Fonction phpinfo disactiv�e';
+    $fr3['NoCmd'] = 'Erreur : Commande non renseignée';
+    $fr3['ConfTrySave'] = "Fichier sans permission d'écriture.\\nTenter de sauver malgré tout";
+    $fr3['ConfSaved'] = 'Configurations sauvegardée';
+    $fr3['PassSaved'] = 'Password sauvegardé';
+    $fr3['FileDirExists'] = 'Fichier ou répertoire déjà existant';
+    $fr3['NoPhpinfo'] = 'Fonction phpinfo disactivée';
     $fr3['NoReturn'] = 'pas de retour';
-    $fr3['FileSent'] = 'Fichier envoy�';
-    $fr3['SpaceLimReached'] = 'Capacit� maximale atteinte';
+    $fr3['FileSent'] = 'Fichier envoyé';
+    $fr3['SpaceLimReached'] = 'Capacité maximale atteinte';
     $fr3['InvExt'] = 'Extension invalide';
-    $fr3['FileNoOverw'] = 'Fichier ne pouvant �tre remplac�';
-    $fr3['FileOverw'] = 'Fichier remplac�';
-    $fr3['FileIgnored'] = 'Fichier ignor�';
-    $fr3['ChkVer'] = 'V�rifier sf.net pour une nouvelle version';
-    $fr3['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour commencer le t�l�chargement !';
+    $fr3['FileNoOverw'] = 'Fichier ne pouvant être remplacé';
+    $fr3['FileOverw'] = 'Fichier remplacé';
+    $fr3['FileIgnored'] = 'Fichier ignoré';
+    $fr3['ChkVer'] = 'Vérifier sf.net pour une nouvelle version';
+    $fr3['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour commencer le téléchargement !';
     $fr3['ChkVerNotAvailable'] = 'Pas de nouvelle version disponible. :(';
     $fr3['ChkVerError'] = 'Erreur de connection.';
     $fr3['Website'] = 'Site Web';
     $fr3['SendingForm'] = "Fichiers en cours d'envoi, merci de patienter";
-    $fr3['NoFileSel'] = 'Pas de fichier s�lectionn�';
+    $fr3['NoFileSel'] = 'Pas de fichier sélectionné';
     $fr3['SelAll'] = 'Tous';
     $fr3['SelNone'] = 'Aucun';
     $fr3['SelInverse'] = 'Inverser';
-    $fr3['Selected_s'] = 's�lectionn�';
+    $fr3['Selected_s'] = 'sélectionné';
     $fr3['Total'] = 'total';
     $fr3['Partition'] = 'Partition';
-    $fr3['RenderTime'] = 'Temps n�cessaire pour obtenir cette page';
+    $fr3['RenderTime'] = 'Temps nécessaire pour obtenir cette page';
     $fr3['Seconds'] = 'sec';
     $fr3['ErrorReport'] = 'Erreur de compte rendu';
 
-	// Dutch (by Leon Buijs)
+	// Dutch - by Leon Buijs
 	$nl['Version'] = 'Versie';
 	$nl['DocRoot'] = 'Document Root';
 	$nl['FLRoot'] = 'File Manager Root';
@@ -1283,7 +1397,7 @@ function et($tag){
 	$nl['Seconds'] = 'sec';
 	$nl['ErrorReport'] = 'Foutenrapport';
 
-    // Italian (by Valerio Capello)
+    // Italian - by Valerio Capello
     $it1['Version'] = 'Versione';
     $it1['DocRoot'] = 'Document Root';
     $it1['FLRoot'] = 'File Manager Root';
@@ -1342,11 +1456,11 @@ function et($tag){
     $it1['TypeDir'] = 'Inserisci il nome della directory';
     $it1['TypeArq'] = 'Inserisci il nome del file';
     $it1['TypeCmd'] = 'Inserisci il comando';
-    $it1['TypeArqComp'] = 'Inserisci il nome del file.\\nLa estensione definir� il tipo di compressione.\\nEsempio:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
+    $it1['TypeArqComp'] = 'Inserisci il nome del file.\\nLa estensione definirà il tipo di compressione.\\nEsempio:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
     $it1['RemSel'] = 'ELIMINA gli elementi selezionati';
-    $it1['NoDestDir'] = 'LA directory di destinazione non � stata selezionata';
+    $it1['NoDestDir'] = 'LA directory di destinazione non è stata selezionata';
     $it1['DestEqOrig'] = 'La directory di origine e di destinazione sono la stessa';
-    $it1['InvalidDest'] = 'La directory di destinazione non � valida';
+    $it1['InvalidDest'] = 'La directory di destinazione non è valida';
     $it1['NoNewPerm'] = 'Nuovi permessi non attivati';
     $it1['CopyTo'] = 'COPIA in';
     $it1['MoveTo'] = 'SPOSTA in';
@@ -1366,18 +1480,18 @@ function et($tag){
     $it1['ConfTrySave'] = 'File senza permesso di scrittura.\\nProvo a salvare comunque';
     $it1['ConfSaved'] = 'Configurazione salvata';
     $it1['PassSaved'] = 'Password salvata';
-    $it1['FileDirExists'] = 'Il file o la directory esiste gi�';
-    $it1['NoPhpinfo'] = 'La funzione phpinfo � disabilitata';
+    $it1['FileDirExists'] = 'Il file o la directory esiste già';
+    $it1['NoPhpinfo'] = 'La funzione phpinfo è disabilitata';
     $it1['NoReturn'] = 'senza Return';
     $it1['FileSent'] = 'File inviato';
-    $it1['SpaceLimReached'] = '� stato raggiunto il limite di spazio disponibile';
+    $it1['SpaceLimReached'] = 'è stato raggiunto il limite di spazio disponibile';
     $it1['InvExt'] = 'Estensione non valida';
-    $it1['FileNoOverw'] = 'Il file non pu� essere sovrascritto';
+    $it1['FileNoOverw'] = 'Il file non può essere sovrascritto';
     $it1['FileOverw'] = 'File sovrascritto';
     $it1['FileIgnored'] = 'File ignorato';
-    $it1['ChkVer'] = 'Controlla se � disponibile una nuova versione su sf.net';
-    $it1['ChkVerAvailable'] = '� disponibile una nuova versione: premi qui per scaricarla.';
-    $it1['ChkVerNotAvailable'] = 'Non � disponibile nessuna nuova versione. :(';
+    $it1['ChkVer'] = 'Controlla se è disponibile una nuova versione su sf.net';
+    $it1['ChkVerAvailable'] = 'è disponibile una nuova versione: premi qui per scaricarla.';
+    $it1['ChkVerNotAvailable'] = 'Non è disponibile nessuna nuova versione. :(';
     $it1['ChkVerError'] = 'Errore di connessione.';
     $it1['Website'] = 'Sito Web';
     $it1['SendingForm'] = 'Invio file, attendere prego';
@@ -1392,7 +1506,7 @@ function et($tag){
     $it1['Seconds'] = 'sec';
     $it1['ErrorReport'] = 'Error Reporting';
 
-    // Italian (by Federico Corr�)
+    // Italian - by Federico Corrà
     $it2['Version'] = 'Versione';
     $it2['DocRoot'] = 'Root Documenti';
     $it2['FLRoot'] = 'Root del File Manager';
@@ -1451,11 +1565,11 @@ function et($tag){
     $it2['TypeDir'] = 'Inserisci il nome della cartella';
     $it2['TypeArq'] = 'Inserisci il nome del file';
     $it2['TypeCmd'] = 'Inserisci il comando';
-    $it2['TypeArqComp'] = 'Inserisci il nome del file.\\nL\'estensione definir� le modalit� di compressione.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
+    $it2['TypeArqComp'] = 'Inserisci il nome del file.\\nL\'estensione definirà le modalità di compressione.\\nEx:\\nnome.zip\\nnome.tar\\nnome.bzip\\nnome.gzip';
     $it2['RemSel'] = 'ELIMINA gli item selezionati';
-    $it2['NoDestDir'] = 'Non � stata selezionata la cartella di destinazione';
+    $it2['NoDestDir'] = 'Non è stata selezionata la cartella di destinazione';
     $it2['DestEqOrig'] = 'La cartella di origine e di destinazione coincidono';
-    $it2['InvalidDest'] = 'La cartella di destinazione non � valida';
+    $it2['InvalidDest'] = 'La cartella di destinazione non è valida';
     $it2['NoNewPerm'] = 'Nuovo permesso non definito';
     $it2['CopyTo'] = 'COPIA in';
     $it2['MoveTo'] = 'MUOVI in';
@@ -1475,7 +1589,7 @@ function et($tag){
     $it2['ConfTrySave'] = 'Accesso in scrittura non consentito.\\nProva a salvare comunque';
     $it2['ConfSaved'] = 'Configurazioni salvate';
     $it2['PassSaved'] = 'Password salvate';
-    $it2['FileDirExists'] = 'Il file o la cartella esiste gi�';
+    $it2['FileDirExists'] = 'Il file o la cartella esiste già';
     $it2['NoPhpinfo'] = 'Funzione phpinfo disabilitata';
     $it2['NoReturn'] = 'Nessun ritorno';
     $it2['FileSent'] = 'File spedito';
@@ -1501,7 +1615,7 @@ function et($tag){
     $it2['Seconds'] = 'sec';
     $it2['ErrorReport'] = 'Report errori';
 
-    // Italian (by Luca Zorzi)
+    // Italian - by Luca Zorzi
     $it3['Version'] = 'Versione';
     $it3['DocRoot'] = 'Document Root';
     $it3['FLRoot'] = 'Root del File Manager';
@@ -1610,7 +1724,7 @@ function et($tag){
     $it3['Seconds'] = 'sec';
     $it3['ErrorReport'] = 'Error Reporting';
 
-	// Italian (by Gianni)
+	// Italian - by Gianni
     $it4['Version'] = 'Versione';
     $it4['DocRoot'] = 'Root documenti';
     $it4['FLRoot'] = 'Root file manager';
@@ -1693,13 +1807,13 @@ function et($tag){
     $it4['ConfTrySave'] = 'File senza permessi di scrittura.\\nRiprova a salvare';
     $it4['ConfSaved'] = 'Preferenze salvate';
     $it4['PassSaved'] = 'Password salvata';
-    $it4['FileDirExists'] = 'Il file o la directory esistono gi�';
+    $it4['FileDirExists'] = 'Il file o la directory esistono già';
     $it4['NoPhpinfo'] = 'Funzione phpinfo disabilitata';
     $it4['NoReturn'] = 'Nessun ritorno';
     $it4['FileSent'] = 'File inviato';
     $it4['SpaceLimReached'] = 'Raggiunto spazio limite';
     $it4['InvExt'] = 'Estensione non valida';
-    $it4['FileNoOverw'] = 'Il file non pu� essere sovrascritto';
+    $it4['FileNoOverw'] = 'Il file non può essere sovrascritto';
     $it4['FileOverw'] = 'File sovrascritto';
     $it4['FileIgnored'] = 'File ignorato';
     $it4['ChkVer'] = 'Controlla aggiornamenti';
@@ -1719,9 +1833,119 @@ function et($tag){
     $it4['Seconds'] = 'sec';
     $it4['ErrorReport'] = 'Report errori';
 
+    // Turkish - by Necdet Yazilimlari
+    $tr['Version'] = 'Versiyon';
+    $tr['DocRoot'] = 'Kok dosya';
+    $tr['FLRoot'] = 'Kok dosya yoneticisi';
+    $tr['Name'] = 'Isim';
+    $tr['And'] = 've';
+    $tr['Enter'] = 'Giris';
+    $tr['Send'] = 'Yolla';
+    $tr['Refresh'] = 'Yenile';
+    $tr['SaveConfig'] = 'Ayarlari kaydet';
+    $tr['SavePass'] = 'Parolayi kaydet';
+    $tr['SaveFile'] = 'Dosyayi kaydet';
+    $tr['Save'] = 'Kaydet';
+    $tr['Leave'] = 'Ayril';
+    $tr['Edit'] = 'Duzenle';
+    $tr['View'] = 'Goster';
+    $tr['Config'] = 'Yapilandirma';
+    $tr['Ren'] = 'Yeniden adlandir';
+    $tr['Rem'] = 'Sil';
+    $tr['Compress'] = '.Zip';
+    $tr['Decompress'] = '.ZipCoz';
+    $tr['ResolveIDs'] = 'Kimlikleri coz';
+    $tr['Move'] = 'Tasi';
+    $tr['Copy'] = 'Kopyala';
+    $tr['ServerInfo'] = 'Sunucu Bilgisi';
+    $tr['CreateDir'] = 'Dizin olustur';
+    $tr['CreateArq'] = 'Dosya olusutur';
+    $tr['ExecCmd'] = 'Komut calistir';
+    $tr['Upload'] = 'Dosya yukle';
+    $tr['UploadEnd'] = 'Yukleme tamamlandi';
+    $tr['Perm'] = 'Izinler';
+    $tr['Perms'] = 'Izinler';
+    $tr['Owner'] = 'Sahip';
+    $tr['Group'] = 'Grup';
+    $tr['Other'] = 'Diger';
+    $tr['Size'] = 'Boyut';
+    $tr['Date'] = 'Tarih';
+    $tr['Type'] = 'Tip';
+    $tr['Free'] = 'Bos';
+    $tr['Shell'] = 'Kabuk';
+    $tr['Read'] = 'Oku';
+    $tr['Write'] = 'Yaz';
+    $tr['Exec'] = 'Calistir';
+    $tr['Apply'] = 'Uygula';
+    $tr['StickyBit'] = 'Sabit bit';
+    $tr['Pass'] = 'Parola';
+    $tr['Lang'] = 'Dil';
+    $tr['File'] = 'Dosya';
+    $tr['File_s'] = 'Dosya(lar)';
+    $tr['Dir_s'] = 'Dizin(ler)';
+    $tr['To'] = 'icin';
+    $tr['Destination'] = 'Hedef';
+    $tr['Configurations'] = 'Yapilandirmalar';
+    $tr['JSError'] = 'JavaScript hatasi';
+    $tr['NoSel'] = 'Secilen oge yok';
+    $tr['SelDir'] = 'Soldaki hedef dizin agaci secin';
+    $tr['TypeDir'] = 'Dizin adini girin';
+    $tr['TypeArq'] = 'Dosya adini girin';
+    $tr['TypeCmd'] = 'Komut girin';
+    $tr['TypeArqComp'] = 'Dosya ismini yazdiktan sonra sonuna .zip ekleyin';
+    $tr['RemSel'] = 'Secili ogeleri sil';
+    $tr['NoDestDir'] = 'Secili dizin yok';
+    $tr['DestEqOrig'] = 'Kokenli ve esit gidis rehberi';
+    $tr['InvalidDest'] = 'Hedef dizin gecersiz';
+    $tr['NoNewPerm'] = 'Izinler uygun degil';
+    $tr['CopyTo'] = 'Kopya icin';
+    $tr['MoveTo'] = 'Tasi icin';
+    $tr['AlterPermTo'] = 'Permission secin';
+    $tr['ConfExec'] = 'Yapilandirmayi onayla';
+    $tr['ConfRem'] = 'Simeyi onayla';
+    $tr['EmptyDir'] = 'Dizin bos';
+    $tr['IOError'] = 'Hata';
+    $tr['FileMan'] = 'Necdet_Yazilimlari';
+    $tr['TypePass'] = 'Parolayi girin';
+    $tr['InvPass'] = 'Gecersiz parola';
+    $tr['ReadDenied'] = 'Okumaya erisim engellendi';
+    $tr['FileNotFound'] = 'Dosya bulunamadi';
+    $tr['AutoClose'] = 'Otomatik kapat';
+    $tr['OutDocRoot'] = 'Kok klasor disindaki dosya';
+    $tr['NoCmd'] = 'Hata: Komut haberdar degil';
+    $tr['ConfTrySave'] = 'Dosya yazma izniniz yok. Yine de kaydetmeyi deneyebilirsiniz.';
+    $tr['ConfSaved'] = 'Ayarlar kaydedildi';
+    $tr['PassSaved'] = 'Parola kaydedildi';
+    $tr['FileDirExists'] = 'Dosya veya dizin zaten var';
+    $tr['NoPhpinfo'] = 'Php fonksiyon bilgisi devre disi';
+    $tr['NoReturn'] = 'Deger dondurmuyor';
+    $tr['FileSent'] = 'Dosya gonderildi';
+    $tr['SpaceLimReached'] = 'Disk limitine ulasildi';
+    $tr['InvExt'] = 'Gecersiz uzanti';
+    $tr['FileNoOverw'] = 'Dosya degistirilemiyor';
+    $tr['FileOverw'] = 'Dosya degistiribiliyor';
+    $tr['FileIgnored'] = 'Dosya kabul edildi';
+    $tr['ChkVer'] = 'Yeni versiyonu kontrol et';
+    $tr['ChkVerAvailable'] = 'Yeni surum bulundu. Indirmek icin buraya tiklayin.';
+    $tr['ChkVerNotAvailable'] = 'Yeni surum bulunamadi.';
+    $tr['ChkVerError'] = 'Baglanti hatasi';
+    $tr['Website'] = 'Website';
+    $tr['SendingForm'] = 'Dosyalar gonderiliyor, lutfen bekleyin';
+    $tr['NoFileSel'] = 'Secili dosya yok';
+    $tr['SelAll'] = 'Hepsi';
+    $tr['SelNone'] = 'Hicbiri';
+    $tr['SelInverse'] = 'Ters';
+    $tr['Selected_s'] = 'Secili oge(ler)';
+    $tr['Total'] = 'Toplam';
+    $tr['Partition'] = 'Bolme';
+    $tr['RenderTime'] = 'Olusturuluyor';
+    $tr['Seconds'] = 'Saniye';
+    $tr['ErrorReport'] = 'Hata raporu';
+
     $lang_ = $$lang;
     if (isset($lang_[$tag])) return html_encode($lang_[$tag]);
-    else return "undefined";
+    //else return "[$tag]"; // So we can know what is missing
+    return $en[$tag];
 }
 // +--------------------------------------------------
 // | File System
@@ -1734,20 +1958,20 @@ function total_size($arg) {
             while($aux = readdir($handle)) {
                 if ($aux != "." && $aux != "..") $total += total_size($arg."/".$aux);
             }
-            closedir($handle);
+            @closedir($handle);
         } else $total = filesize($arg);
     }
     return $total;
 }
 function total_delete($arg) {
     if (file_exists($arg)) {
-        chmod($arg,0777);
+        @chmod($arg,0777);
         if (is_dir($arg)) {
             $handle = opendir($arg);
             while($aux = readdir($handle)) {
                 if ($aux != "." && $aux != "..") total_delete($arg."/".$aux);
             }
-            closedir($handle);
+            @closedir($handle);
             rmdir($arg);
         } else unlink($arg);
     }
@@ -1761,7 +1985,7 @@ function total_copy($orig,$dest) {
             while(($aux = readdir($handle))&&($ok)) {
                 if ($aux != "." && $aux != "..") $ok = total_copy($orig."/".$aux,$dest."/".$aux);
             }
-            closedir($handle);
+            @closedir($handle);
         } else $ok = copy((string)$orig,(string)$dest);
     }
     return $ok;
@@ -1878,20 +2102,7 @@ function zip_extract(){
 // | Data Formating
 // +--------------------------------------------------
 function html_encode($str){
-    return htmlentities($str);
-}
-// html_entity_decode() replacement
-function html_entity_decode_for_php4_compatibility ($string)  {
-   $trans_tbl = get_html_translation_table (HTML_ENTITIES);
-   $trans_tbl = array_flip ($trans_tbl);
-   $ret = strtr ($string, $trans_tbl);
-   return preg_replace('/\&\#([0-9]+)\;/me',"chr('\\1')",$ret);
-}
-function html_dencode($str){
-    if (is_string($str)){
-       if (get_magic_quotes_gpc()) return stripslashes(html_entity_decode_for_php4_compatibility($str));
-       else return html_entity_decode($str);
-    } else return $str;
+	return preg_replace(array('/&/', '/</', '/>/', '/"/'), array('&amp;', '&lt;', '&gt;', '&quot;'), $str);  // Bypass PHP to allow any charset!!
 }
 function rep($x,$y){
   if ($x) {
@@ -1919,7 +2130,7 @@ function replace_double($sub,$str){
 }
 function remove_special_chars($str){
     $str = trim($str);
-    $str = strtr($str,"��������������������������������������������������������������!@#%&*()[]{}+=?",
+    $str = strtr($str,"¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ!@#%&*()[]{}+=?",
                       "YuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy_______________");
     $str = str_replace("..","",str_replace("/","",str_replace("\\","",str_replace("\$","",$str))));
     return $str;
@@ -2024,12 +2235,13 @@ function get_group ($arg) {
 // | Interface
 // +--------------------------------------------------
 function html_header($header=""){
-    global $fm_color;
+    global $charset,$fm_color;
     echo "
-    <html>
-    <head>
-    <title>...:::: ".et('FileMan')."</title>
-    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">
+	<!DOCTYPE HTML PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
+	<html xmlns=\"http://www.w3.org/1999/xhtml\">
+    <head>    
+    <meta http-equiv=\"content-type\" content=\"text/html; charset=".$charset."\" />	
+	<title>...:::: ".et('FileMan')."</title>
     <script language=\"Javascript\" type=\"text/javascript\">
     <!--
         function Is(){
@@ -2238,20 +2450,19 @@ function tree($dir_before,$dir_current,$indice){
                 if ($file != "." && $file != ".." && is_dir("$dir_current/$file"))
                     $mat_dir[] = $file;
             }
-            closedir($handle);
+            @closedir($handle);
             if (count($mat_dir)){
                 sort($mat_dir,SORT_STRING);
-                // Com Sub-dir
+                // with Sub-dir
                 if ($indice != 0){
                     for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
-                    //echo "�";
                 }
                 if ($dir_before != $dir_current){
-                    if (strstr($expanded_dir_list,":$dir_current/$dir_name")) $op_str = "[�]";
+                    if (strstr($expanded_dir_list,":$dir_current/$dir_name")) $op_str = "[–]";
                     else $op_str = "[+]";
-                    echo "<nobr><a href=\"JavaScript:go_dir('$dir_current/$dir_name')\"><b>$op_str</b></a> <a href=\"JavaScript:go('$dir_current')\"><b>$dir_name</b></a></nobr><br>\n";
+                    echo "<nobr><a href=\"JavaScript:go_dir('$dir_current/$dir_name')\">$op_str</a> <a href=\"JavaScript:go('$dir_current')\">$dir_name</a></nobr><br>\n";
                 } else {
-                    echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><b>$fm_current_root</b></a></nobr><br>\n";
+                    echo "<nobr><a href=\"JavaScript:go('$dir_current')\">$fm_current_root</a></nobr><br>\n";
                 }
                 for ($x=0;$x<count($mat_dir);$x++){
                     if (($dir_before == $dir_current)||(strstr($expanded_dir_list,":$dir_current/$dir_name"))){
@@ -2259,34 +2470,34 @@ function tree($dir_before,$dir_current,$indice){
                     } else flush();
                 }
             } else {
-              // Sem Sub-dir
+              // no Sub-dir
               if ($dir_before != $dir_current){
                 for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
                 echo "<b>[&nbsp;&nbsp;]</b>";
-                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"> <b>$dir_name</b></a></nobr><br>\n";
+                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"> $dir_name</a></nobr><br>\n";
               } else {
-                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"> <b>$fm_current_root</b></a></nobr><br>\n";
+                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"> $fm_current_root</a></nobr><br>\n";
               }
             }
         } else {
-            // Negado
+            // denied
             if ($dir_before != $dir_current){
                 for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
                 echo "<b>[&nbsp;&nbsp;]</b>";
-                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> <b>$dir_name</b></font></a></nobr><br>\n";
+                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> $dir_name</font></a></nobr><br>\n";
             } else {
-                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> <b>$fm_current_root</b></font></a></nobr><br>\n";
+                echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> $fm_current_root</font></a></nobr><br>\n";
             }
 
         }
     } else {
         // denied
         if ($dir_before != $dir_current){
-            for ($aux=1;$aux<$indice;$aux++) echo "    ";
+            for ($aux=1;$aux<$indice;$aux++) echo "&nbsp;&nbsp;&nbsp;&nbsp;";
             echo "<b>[&nbsp;&nbsp;]</b>";
-            echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> <b>$dir_name</b></font></a></nobr><br>\n";
+            echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> $dir_name</font></a></nobr><br>\n";
         } else {
-            echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> <b>$fm_current_root</b></font></a></nobr><br>\n";
+            echo "<nobr><a href=\"JavaScript:go('$dir_current')\"><font color=red> $fm_current_root</font></a></nobr><br>\n";
         }
     }
 }
@@ -2309,8 +2520,11 @@ function show_tree(){
     echo "
     <script language=\"Javascript\" type=\"text/javascript\">
     <!--
-        // Disable text selection
-        function disableTextSelection(e){return false}
+        // Disable text selection, binding the onmousedown, but not for the combo or buttons.. they must work.
+        function disableTextSelection(e){
+			var type = String(e.target.type);
+			return (type.indexOf('select') != -1 || type.indexOf('button') != -1);
+		}
         function enableTextSelection(){return true}
         if (is.ie) document.onselectstart=new Function('return false')
         else {
@@ -2349,9 +2563,12 @@ function show_tree(){
         echo "<select name=drive onchange=\"set_fm_current_root(this.value)\">";
         $aux="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         for($x=0;$x<strlen($aux);$x++){
-            if (strstr(strtoupper($fm_current_root),$aux[$x].":/")) $is_sel="selected";
-            else $is_sel="";
-            echo "<option $is_sel value=\"".$aux[$x].":/\">".$aux[$x].":/";
+			if ($handle = opendir($aux[$x].":/")){
+    			@closedir($handle);
+	            if (strstr(strtoupper($fm_current_root),$aux[$x].":/")) $is_sel="selected";
+	            else $is_sel="";
+	            echo "<option $is_sel value=\"".$aux[$x].":/\">".$aux[$x].":/";
+			}
         }
         echo "</select> ";
     }
@@ -2393,7 +2610,7 @@ function dir_list_form() {
             if (is_file($current_dir.$file)){
                 $ext = strtolower(strrchr($file,"."));
                 $entry_list[$entry_count]["type"] = "file";
-                // Fun��o filetype() returns only "file"...
+                // Função filetype() returns only "file"...
                 $entry_list[$entry_count]["size"] = filesize($current_dir.$file);
                 $entry_list[$entry_count]["sizet"] = format_size($entry_list[$entry_count]["size"]);
                 if (strstr($ext,".")){
@@ -2429,7 +2646,7 @@ function dir_list_form() {
             $entry_count++;
           }
         }
-        closedir($opdir);
+        @closedir($opdir);
 
         if($entry_count){
             $or1="1A";
@@ -2686,7 +2903,7 @@ function dir_list_form() {
             window.open('".addslashes($path_info["basename"])."?action=7&current_dir=".addslashes($current_dir)."&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
         }
         function config(){
-            var w = 600;
+            var w = 650;
             var h = 400;
             window.open('".addslashes($path_info["basename"])."?action=2', 'win_config', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
         }
@@ -2890,7 +3107,7 @@ function dir_list_form() {
                     $dir_out[$dir_count][] = "<td><nobr>".$dir_entry["sizet"]."</nobr></td>";
                     $dir_out[$dir_count][] = "<td><nobr>".$dir_entry["datet"]."</nobr></td>";
                     if ($has_files) $dir_out[$dir_count][] = "<td>&nbsp;</td>";
-                    // Op��es de diret�rio
+                    // Opções de diretório
                     if ( is_writable($current_dir.$file) ) $dir_out[$dir_count][] = "
                         <td align=center><a href=\"JavaScript:if(confirm('".et('ConfRem')." \\'".addslashes($file)."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
                     if ( is_writable($current_dir.$file) ) $dir_out[$dir_count][] = "
@@ -2912,7 +3129,7 @@ function dir_list_form() {
                     $file_out[$file_count][] = "<td><nobr>".$dir_entry["sizet"]."</nobr></td>";
                     $file_out[$file_count][] = "<td><nobr>".$dir_entry["datet"]."</nobr></td>";
                     $file_out[$file_count][] = "<td>".$dir_entry["extt"]."</td>";
-                    // Op��es de arquivo
+                    // Opções de arquivo
                     if ( is_writable($current_dir.$file) ) $file_out[$file_count][] = "
                                 <td align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".$file."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
@@ -3281,7 +3498,7 @@ function view(){
     if ($is_reachable){
         $url = $url_info["scheme"]."://".$url_info["host"];
         if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
-        // Malditas variaveis de sistema!! No windows doc_root � sempre em lowercase... cad� o str_ireplace() ??
+        // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
         $url .= str_replace($doc_root,"",$current_dir).$filename;
         echo "
         document.location.href='$url';";
@@ -3315,7 +3532,7 @@ function edit_file_form(){
     <input type=hidden name=current_dir value=\"$current_dir\">
     <input type=hidden name=filename value=\"$filename\">
     <tr><th colspan=2>".$file."</th></tr>
-    <tr><td colspan=2><textarea name=file_data style='width:1000;height:700;'>".html_encode($file_data)."</textarea></td></tr>
+    <tr><td colspan=2><textarea name=file_data style='width:1000px;height:680px;'>".html_encode($file_data)."</textarea></td></tr>
     <tr><td><input type=button value=\"".et('Refresh')."\" onclick=\"document.edit_form_refresh.submit()\"></td><td align=right><input type=button value=\"".et('SaveFile')."\" onclick=\"go_save()\"></td></tr>
     </form>
     <form name=\"edit_form_refresh\" action=\"".$path_info["basename"]."\" method=\"post\">
@@ -3356,7 +3573,9 @@ function config_form(){
                 $ChkVerWarning = "<tr><td align=right> ";
                 if (is_array($data)&&count($data)){
                     // sf.net logo
-                    $ChkVerWarning .= "<a href=\"JavaScript:open_win('http://sourceforge.net')\"><img src=\"http://sourceforge.net/sflogo.php?group_id=114392&type=1\" width=\"88\" height=\"31\" style=\"border: 1px solid #AAAAAA\" alt=\"SourceForge.net Logo\" /></a>";
+                    $ChkVerWarning .= "<a href=\"JavaScript:open_win('http://sourceforge.net')\">
+                    <img src=\"http://sourceforge.net/sflogo.php?group_id=114392&type=1\" width=\"88\" height=\"31\" style=\"border: 1px solid #AAAAAA\" alt=\"SourceForge.net Logo\" />
+					</a>";
                     if (str_replace(".","",$data['version'])>str_replace(".","",$cfg->data['version'])) $ChkVerWarning .= "<td><a href=\"JavaScript:open_win('http://prdownloads.sourceforge.net/phpfm/phpFileManager-".$data['version'].".zip?download')\"><font color=green>".et('ChkVerAvailable')."</font></a>";
                     else $ChkVerWarning .= "<td><font color=red>".et('ChkVerNotAvailable')."</font>";
                 } else $ChkVerWarning .= "<td><font color=red>".et('ChkVerError')."</font>";
@@ -3411,8 +3630,8 @@ function config_form(){
     <tr><td align=right width=\"1%\">".et('Version').":<td>$version</td></tr>
     <tr><td align=right>".et('Size').":<td>".get_size($fm_self)."</td></tr>
     <tr><td align=right>".et('Website').":<td><a href=\"JavaScript:open_win('http://phpfm.sf.net')\">http://phpfm.sf.net</a></td></tr>";
+    echo "<tr><td align=right><a href=\"http://sourceforge.net/donate/index.php?group_id=114392\"><img src=\"http://images.sourceforge.net/images/project-support.jpg\" width=\"88\" height=\"32\" border=\"0\" alt=\"Support This Project\" /></a><td><input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\"></td></tr>";
     if (strlen($ChkVerWarning)) echo $ChkVerWarning.$data['warnings'];
-    else echo "<tr><td align=right> <td><input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\">";
     echo "
     <tr><td align=right width=1><nobr>".et('DocRoot').":</nobr><td>".$doc_root."</td></tr>
     <tr><td align=right><nobr>".et('FLRoot').":</nobr><td><input type=text size=60 name=newfm_root value=\"".$cfg->data['fm_root']."\" onkeypress=\"enterSubmit(event,'test_config_form(2)')\"></td></tr>
@@ -3427,11 +3646,13 @@ function config_form(){
         <option value=de2>German - by AXL
         <option value=de3>German - by Mathias Rothe
         <option value=it1>Italian - by Valerio Capello
-        <option value=it2>Italian - by Federico Corr�
+        <option value=it2>Italian - by Federico Corrà
         <option value=it3>Italian - by Luca Zorzi
         <option value=it4>Italian - by Gianni
+		<option value=kr>Korean - by Airplanez	
 		<option value=pt>Portuguese - by Fabricio Seger Kolling
 		<option value=es>Spanish - by Sh Studios
+        <option value=tr>Turkish - by Necdet Yazilimlari
 	</select></td></tr>
     <tr><td align=right>".et('ErrorReport').":<td><select name=newerror><option value=\"\">NONE<option value=\"".E_ALL."\">E_ALL<option value=\"".E_ERROR."\">E_ERROR<option value=\"".(E_ERROR | E_WARNING)."\">E_ERROR & E_WARNING<option value=\"".(E_ERROR | E_WARNING | E_NOTICE)."\">E_ERROR & E_WARNING & E_NOTICE</select></td></tr>
     <tr><td> <td><input type=button value=\"".et('SaveConfig')."\" onclick=\"test_config_form(2)\">";
@@ -4577,14 +4798,14 @@ class zip_file extends archive
             {
                 continue;
             }
-            $translate =  array('�'=>pack("C",128),'�'=>pack("C",129),'�'=>pack("C",130),'�'=>pack("C",131),'�'=>pack("C",132),
-                                '�'=>pack("C",133),'�'=>pack("C",134),'�'=>pack("C",135),'�'=>pack("C",136),'�'=>pack("C",137),
-                                '�'=>pack("C",138),'�'=>pack("C",139),'�'=>pack("C",140),'�'=>pack("C",141),'�'=>pack("C",142),
-                                '�'=>pack("C",143),'�'=>pack("C",144),'�'=>pack("C",145),'�'=>pack("C",146),'�'=>pack("C",147),
-                                '�'=>pack("C",148),'�'=>pack("C",149),'�'=>pack("C",150),'�'=>pack("C",151),'_'=>pack("C",152),
-                                '�'=>pack("C",153),'�'=>pack("C",154),'�'=>pack("C",156),'�'=>pack("C",157),'_'=>pack("C",158),
-                                '�'=>pack("C",159),'�'=>pack("C",160),'�'=>pack("C",161),'�'=>pack("C",162),'�'=>pack("C",163),
-                                '�'=>pack("C",164),'�'=>pack("C",165));
+            $translate =  array('Ç'=>pack("C",128),'ü'=>pack("C",129),'é'=>pack("C",130),'â'=>pack("C",131),'ä'=>pack("C",132),
+                                'à'=>pack("C",133),'å'=>pack("C",134),'ç'=>pack("C",135),'ê'=>pack("C",136),'ë'=>pack("C",137),
+                                'è'=>pack("C",138),'ï'=>pack("C",139),'î'=>pack("C",140),'ì'=>pack("C",141),'Ä'=>pack("C",142),
+                                'Å'=>pack("C",143),'É'=>pack("C",144),'æ'=>pack("C",145),'Æ'=>pack("C",146),'ô'=>pack("C",147),
+                                'ö'=>pack("C",148),'ò'=>pack("C",149),'û'=>pack("C",150),'ù'=>pack("C",151),'_'=>pack("C",152),
+                                'Ö'=>pack("C",153),'Ü'=>pack("C",154),'£'=>pack("C",156),'¥'=>pack("C",157),'_'=>pack("C",158),
+                                'ƒ'=>pack("C",159),'á'=>pack("C",160),'í'=>pack("C",161),'ó'=>pack("C",162),'ú'=>pack("C",163),
+                                'ñ'=>pack("C",164),'Ñ'=>pack("C",165));
             $current['name2'] = strtr($current['name2'],$translate);
 
             $timedate = explode(" ",date("Y n j G i s",$current['stat'][9]));
