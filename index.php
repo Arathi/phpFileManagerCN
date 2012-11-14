@@ -1,14 +1,14 @@
 <?php
-//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.5";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.6";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
  +--------------------------------------------------
- | phpFileManager 0.9.5
+ | phpFileManager 0.9.6
  | By Fabricio Seger Kolling
  | Copyright (c) 2004-2012 Fabricio Seger Kolling
  | E-mail: dulldusk@gmail.com
  | URL: http://phpfm.sf.net
- | Last Changed: 2012-10-27
+ | Last Changed: 2012-11-13
  +--------------------------------------------------
  | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
@@ -52,7 +52,7 @@
 	//@ini_set('default_charset', $charset);
     if (@get_magic_quotes_gpc()) {
         function stripslashes_deep($value){
-            return is_array($value)? array_map('stripslashes_deep', $value):html_decode($value);
+            return is_array($value)? array_map('stripslashes_deep', $value):$value;
         }
         $_POST = array_map('stripslashes_deep', $_POST);
         $_GET = array_map('stripslashes_deep', $_GET);
@@ -172,7 +172,7 @@ class config {
             'error_reporting'=>'',
             'fm_root'=>'',
             'cookie_cache_time'=>60*60*24*30, // 30 Days
-            'version'=>'0.9.5'
+            'version'=>'0.9.6'
             );
         $data = false;
         $this->filename = $fm_self;
@@ -410,7 +410,7 @@ function et($tag){
     $pt['FileIgnored'] = 'Arquivo omitido';
     $pt['ChkVer'] = 'Verificar sf.net por nova versão';
     $pt['ChkVerAvailable'] = 'Nova versão, clique aqui para iniciar download!!';
-    $pt['ChkVerNotAvailable'] = 'Não há nova versão disponível :(';
+    $pt['ChkVerNotAvailable'] = 'Não há nova versão disponível. :(';
     $pt['ChkVerError'] = 'Erro de conexão.';
     $pt['Website'] = 'Website';
     $pt['SendingForm'] = 'Enviando arquivos, aguarde';
@@ -1942,6 +1942,115 @@ function et($tag){
     $tr['Seconds'] = 'Saniye';
     $tr['ErrorReport'] = 'Hata raporu';
 
+	// Россия - Евгений Рашев
+	$ru['Version']='Версия';
+	$ru['DocRoot']='Документ Root ';
+	$ru['FLRoot']='Файловый менеджер';
+	$ru['Name']='Имя';
+	$ru['And']='и';
+	$ru['Enter']='Enter';
+	$ru['Send']='Отправить';
+	$ru['Refresh']='Обновить';
+	$ru['SaveConfig']='Сохранить конфигурацию';
+	$ru['SavePass']='Сохранить пароль';
+	$ru['SaveFile']='Сохранить файл ';
+	$ru['Save']='Сохранить';
+	$ru['Leave']='Оставь';
+	$ru['Edit']='Изменить';
+	$ru['View']='Просмотр';
+	$ru['Config']='Настройки';
+	$ru['Ren']='Переименовать';
+	$ru['Rem']='Удалить';
+	$ru['Compress']='Сжать';
+	$ru['Decompress']='Распаковать';
+	$ru['ResolveIDs']='Определять id';
+	$ru['Move']='Переместить';
+	$ru['Copy']='Копировать';
+	$ru['ServerInfo']='Инфо о сервере';
+	$ru['CreateDir']='Создать папку';
+	$ru['CreateArq']='Создайте файл ';
+	$ru['ExecCmd']='Выполнить';
+	$ru['Upload']='Загрузить';
+	$ru['UploadEnd']='Загружено';
+	$ru['Perm']='Права';
+	$ru['Perms']='Разрешения';
+	$ru['Owner']='Владелец';
+	$ru['Group']='Группа';
+	$ru['Other']='Другие';
+	$ru['Size']='Размер';
+	$ru['Date']='Дата';
+	$ru['Type']='Тип';
+	$ru['Free']='Свободно';
+	$ru['Shell']='Shell';
+	$ru['Read']='Читать';
+	$ru['Write']='Писать';
+	$ru['Exec']='Выполнять';
+	$ru['Apply']='Применить';
+	$ru['StickyBit']='StickyBit';
+	$ru['Pass']='Пароль';
+	$ru['Lang']='Язык';
+	$ru['File']='Файл';
+	$ru['File_s']='Файл..';
+	$ru['Dir_s']='Пап..';
+	$ru['To']='в';
+	$ru['Destination']='Назначение';
+	$ru['Configurations']='Конфигурация';
+	$ru['JSError']='Ошибка JavaScript';
+	$ru['NoSel']='нет выбранных элементов';
+	$ru['SelDir']='Выберите папку назначения на левом дереве ';
+	$ru['TypeDir']='Введите имя каталога ';
+	$ru['TypeArq']='Введите имя файла';
+	$ru['TypeCmd']='Введите команду ';
+	$ru['TypeArqComp']='Введите имя файла ,расширение\\n это позволит определить тип сжатия \\n Пример:.. \\n nome.zip \\n nome.tar \\n nome.bzip \\n nome.gzip ';
+	$ru['RemSel']='Удалить выбранные элементы';
+	$ru['NoDestDir']='нет выбранного каталога назначения';
+	$ru['DestEqOrig']='Происхождение и назначение каталогов равны ';
+	$ru['InvalidDest']='Назначение каталога недействительно';
+	$ru['NoNewPerm']='Новые разрешения не установлены';
+	$ru['CopyTo']='Копировать в ';
+	$ru['MoveTo']='Переместить в';
+	$ru['AlterPermTo']='Изменение разрешений в ';
+	$ru['ConfExec']='Подтвердить ВЫПОЛНИТЬ ';
+	$ru['ConfRem']='Подтвердить УДАЛЕНИЕ';
+	$ru['EmptyDir']='Пустой каталог ';
+	$ru['IOError']='I/O Error';
+	$ru['FileMan']='PHP Файловый менеджер ';
+	$ru['TypePass']='Введите пароль';
+	$ru['InvPass']='Неверный пароль';
+	$ru['ReadDenied']='Доступ запрещен ';
+	$ru['FileNotFound']='Файл не найден';
+	$ru['AutoClose']='Закрыть полностью ';
+	$ru['OutDocRoot']='Файлы за пределами DOCUMENT_ROOT';
+	$ru['NoCmd']='Ошибка: Не поддерживаемая команда';
+	$ru['ConfTrySave']='Файл без прав на запись. \\n Сохранить в любом случае. ';
+	$ru['ConfSaved']='Конфигурация сохранена';
+	$ru['PassSaved']='Пароль сохранен';
+	$ru['FileDirExists']='Файл или каталог уже существует';
+	$ru['NoPhpinfo']='Функция PHPInfo отключена';
+	$ru['NoReturn']='Нет возврата';
+	$ru['FileSent']='Файл отправлен';
+	$ru['SpaceLimReached']='Достигнут предел Пространства';
+	$ru['InvExt']='Неверное расширение';
+	$ru['FileNoOverw']='Файл не может быть перезаписан ';
+	$ru['FileOverw']='Файл перезаписывается';
+	$ru['FileIgnored']='Файл игнорируется';
+	$ru['ChkVer']='Проверить обновление';
+	$ru['ChkVerAvailable']=' Доступна новая версия, нажмите здесь, чтобы начать загрузку! ';
+	$ru['ChkVerNotAvailable']='Нет новой версии. :(';
+	$ru['ChkVerError']='Ошибка подключения. ';
+	$ru['Website']='Сайт';
+	$ru['SendingForm']='Отправка файлов, пожалуйста, подождите ';
+	$ru['NoFileSel']='Нет выбранных файлов';
+	$ru['SelAll']='Выделить все';
+	$ru['SelNone']='Отмена';
+	$ru['SelInverse']='Обратить';
+	$ru['Selected_s']='Выбран';
+	$ru['Total']='Всего';
+	$ru['Partition']='Раздел';
+	$ru['RenderTime']='Скрипт выполнен за';
+	$ru['Seconds']='Секунд';
+	$ru['ErrorReport']='Отчет об ошибках';
+
     $lang_ = $$lang;
     if (isset($lang_[$tag])) return html_encode($lang_[$tag]);
     //else return "[$tag]"; // So we can know what is missing
@@ -2520,16 +2629,16 @@ function show_tree(){
     echo "
     <script language=\"Javascript\" type=\"text/javascript\">
     <!--
-        // Disable text selection, binding the onmousedown, but not for the combo or buttons.. they must work.
+        // Disable text selection, binding the onmousedown, but not for some elements, it must work.
         function disableTextSelection(e){
 			var type = String(e.target.type);
-			return (type.indexOf('select') != -1 || type.indexOf('button') != -1);
+			return (type.indexOf('select') != -1 || type.indexOf('button') != -1 || type.indexOf('input') != -1 || type.indexOf('radio') != -1);
 		}
         function enableTextSelection(){return true}
         if (is.ie) document.onselectstart=new Function('return false')
         else {
-            document.onmousedown=disableTextSelection
-            document.onclick=enableTextSelection
+            document.body.onmousedown=disableTextSelection
+            document.body.onclick=enableTextSelection
         }
         var flag = ".(($setflag)?"true":"false")."
         function set_flag(arg) {
@@ -2771,7 +2880,8 @@ function dir_list_form() {
             } else {
                 multipleSelection = (e.which == 1);
             }
-            return false;
+			var type = String(e.target.type);
+			return (type.indexOf('select') != -1 || type.indexOf('button') != -1 || type.indexOf('input') != -1 || type.indexOf('radio') != -1);
         }
         function switch_flag_off(e) {
             if (is.ie){
@@ -3652,6 +3762,7 @@ function config_form(){
 		<option value=kr>Korean - by Airplanez	
 		<option value=pt>Portuguese - by Fabricio Seger Kolling
 		<option value=es>Spanish - by Sh Studios
+        <option value=ru>Russian - by Евгений Рашев
         <option value=tr>Turkish - by Necdet Yazilimlari
 	</select></td></tr>
     <tr><td align=right>".et('ErrorReport').":<td><select name=newerror><option value=\"\">NONE<option value=\"".E_ALL."\">E_ALL<option value=\"".E_ERROR."\">E_ERROR<option value=\"".(E_ERROR | E_WARNING)."\">E_ERROR & E_WARNING<option value=\"".(E_ERROR | E_WARNING | E_NOTICE)."\">E_ERROR & E_WARNING & E_NOTICE</select></td></tr>
@@ -3756,15 +3867,25 @@ function shell_form(){
 function server_info(){
     if (!@phpinfo()) echo et('NoPhpinfo')."...";
     echo "<br><br>";
-    $a=ini_get_all();
-    $output="<table border=1 cellspacing=0 cellpadding=4 align=center>";
-    while(list($key, $value)=each($a)) {
-        list($k, $v)= each($a[$key]);
-        $output.="<tr><td align=right>$key</td><td>$v</td></tr>";
-    }
-    $output.="</table>";
-    echo $output;
-    echo "<br><br><table border=1 cellspacing=0 cellpadding=4 align=center>";
+	    $a=ini_get_all();
+	    $output="<table border=1 cellspacing=0 cellpadding=4 align=center>";
+	    $output.="<tr><th colspan=2>ini_get_all()</td></tr>";
+	    while(list($key, $value)=each($a)) {
+	        list($k, $v)= each($a[$key]);
+	        $output.="<tr><td align=right>$key</td><td>$v</td></tr>";
+	    }
+	    $output.="</table>";
+	echo $output;
+    echo "<br><br>";
+	    $output="<table border=1 cellspacing=0 cellpadding=4 align=center>";
+	    $output.="<tr><th colspan=2>\$_SERVER</td></tr>";
+	    foreach ($_SERVER as $k=>$v) {
+	        $output.="<tr><td align=right>$k</td><td>$v</td></tr>";
+	    }
+	    $output.="</table>";
+	echo $output;
+    echo "<br><br>";
+    echo "<table border=1 cellspacing=0 cellpadding=4 align=center>";
     $safe_mode=trim(ini_get("safe_mode"));
     if ((strlen($safe_mode)==0)||($safe_mode==0)) $safe_mode=false;
     else $safe_mode=true;
