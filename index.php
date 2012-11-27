@@ -1,14 +1,14 @@
 <?php
-//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.6";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.7";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
  +--------------------------------------------------
- | phpFileManager 0.9.6
+ | phpFileManager 0.9.7
  | By Fabricio Seger Kolling
  | Copyright (c) 2004-2012 Fabricio Seger Kolling
  | E-mail: dulldusk@gmail.com
  | URL: http://phpfm.sf.net
- | Last Changed: 2012-11-13
+ | Last Changed: 2012-11-26
  +--------------------------------------------------
  | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
@@ -63,13 +63,23 @@
     foreach ($_GET as $key => $val) $$key=$val;
     foreach ($_POST as $key => $val) $$key=$val;
     foreach ($_COOKIE as $key => $val) $$key=$val;
-    if (empty($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["REMOTE_ADDR"]; //nao usa proxy
-    else $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; //usa proxy
+	// Server Vars
+    $ip = $_SERVER["REMOTE_ADDR"];
+    if (strlen($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; // using proxy
 	if ($ip == "::1") $ip = "";
     $islinux = !(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
-    $url_info = parse_url($_SERVER["HTTP_REFERER"]);
+    function getServerURL() {
+        $url = ($_SERVER["HTTPS"] == "on")?"https://":"http://";
+        $url .= $_SERVER["SERVER_NAME"]; // variável do servidor, $_SERVER["HTTP_HOST"] é equivalente
+        if ($_SERVER["SERVER_PORT"] != "80") $url .= ":".$_SERVER["SERVER_PORT"];
+        return $url;
+    }
+    function getCompleteURL() {
+        return getServerURL().$_SERVER["REQUEST_URI"];
+    }
+    $url = getCompleteURL();
+    $url_info = parse_url($url);
 	if( !isset($_SERVER['DOCUMENT_ROOT']) ) {
-		$path = "";
 		if ( isset($_SERVER['SCRIPT_FILENAME']) ) $path = $_SERVER['SCRIPT_FILENAME'];
 		elseif ( isset($_SERVER['PATH_TRANSLATED']) ) $path = str_replace('\\\\', '\\', $_SERVER['PATH_TRANSLATED']);
 		$_SERVER['DOCUMENT_ROOT'] = str_replace( '\\', '/', substr($path, 0, 0-strlen($_SERVER['PHP_SELF'])));
@@ -89,7 +99,6 @@
         if (!$islinux) $current_dir = ucfirst($current_dir);
         //@chmod($current_dir,0777);
     } else $current_dir = format_path($current_dir);
-    $is_reachable = (stristr($current_dir,$doc_root)!==false);
     // Auto Expand Local Path
     if (!isset($expanded_dir_list)){
         $expanded_dir_list = "";
@@ -172,7 +181,7 @@ class config {
             'error_reporting'=>'',
             'fm_root'=>'',
             'cookie_cache_time'=>60*60*24*30, // 30 Days
-            'version'=>'0.9.6'
+            'version'=>'0.9.7'
             );
         $data = false;
         $this->filename = $fm_self;
@@ -299,7 +308,7 @@ function et($tag){
     $en['FileNoOverw'] = 'File could not be overwritten';
     $en['FileOverw'] = 'File overwritten';
     $en['FileIgnored'] = 'File ignored';
-    $en['ChkVer'] = 'Check sf.net for new version';
+    $en['ChkVer'] = 'Check for new version';
     $en['ChkVerAvailable'] = 'New version, click here to begin download!!';
     $en['ChkVerNotAvailable'] = 'No new version available. :(';
     $en['ChkVerError'] = 'Connection Error.';
@@ -408,7 +417,7 @@ function et($tag){
     $pt['FileNoOverw'] = 'Arquivo não pode ser sobreescrito';
     $pt['FileOverw'] = 'Arquivo sobreescrito';
     $pt['FileIgnored'] = 'Arquivo omitido';
-    $pt['ChkVer'] = 'Verificar sf.net por nova versão';
+    $pt['ChkVer'] = 'Verificar por nova versão';
     $pt['ChkVerAvailable'] = 'Nova versão, clique aqui para iniciar download!!';
     $pt['ChkVerNotAvailable'] = 'Não há nova versão disponível. :(';
     $pt['ChkVerError'] = 'Erro de conexão.';
@@ -517,7 +526,7 @@ function et($tag){
     $es['FileNoOverw'] = 'El archivo no pudo ser sobreescrito';
     $es['FileOverw'] = 'Archivo sobreescrito';
     $es['FileIgnored'] = 'Archivo ignorado';
-    $es['ChkVer'] = 'Chequear en sf.net las actualizaciones';
+    $es['ChkVer'] = 'Chequear las actualizaciones';
     $es['ChkVerAvailable'] = 'Nueva version, haga click aqui para descargar!!';
     $es['ChkVerNotAvailable'] = 'Su version es la mas reciente.';
     $es['ChkVerError'] = 'Error de coneccion.';
@@ -623,7 +632,7 @@ function et($tag){
     $kr['FileNoOverw'] = '파일을 덮어 쓸수 없습니다';
     $kr['FileOverw'] = '파일을 덮어 썼습니다';
     $kr['FileIgnored'] = '파일이 무시되었습니다';
-    $kr['ChkVer'] = 'sf.net 에서 새버전 확인';
+    $kr['ChkVer'] = '에서 새버전 확인';
     $kr['ChkVerAvailable'] = '새로운 버전이 있습니다. 다운받으려면 클릭하세요!!';
     $kr['ChkVerNotAvailable'] = '새로운 버전이 없습니다. :(';
     $kr['ChkVerError'] = '연결 오류';
@@ -726,7 +735,7 @@ function et($tag){
     $de1['FileNoOverw'] = 'Datei kann nicht überschrieben werden';
     $de1['FileOverw'] = 'Datei überschrieben';
     $de1['FileIgnored'] = 'Datei ignoriert';
-    $de1['ChkVer'] = 'Prüfe auf neue Version bei sf.net';
+    $de1['ChkVer'] = 'Prüfe auf neue Version';
     $de1['ChkVerAvailable'] = 'Neue Version verfügbar; klicke hier, um den Download zu starten!!';
     $de1['ChkVerNotAvailable'] = 'Keine neue Version gefunden. :(';
     $de1['ChkVerError'] = 'Verbindungsfehler.';
@@ -835,7 +844,7 @@ function et($tag){
     $de2['FileNoOverw'] = 'Datei kann nicht überschrieben werden';
     $de2['FileOverw'] = 'Datei überschrieben';
     $de2['FileIgnored'] = 'Datei ignoriert';
-    $de2['ChkVer'] = 'Überprüfe sf.net nach neuer Version';
+    $de2['ChkVer'] = 'Überprüfe neuer Version';
     $de2['ChkVerAvailable'] = 'Neue Version. Hier klicken für Download!!';
     $de2['ChkVerNotAvailable'] = 'Keine neue Version verfügbar. :(';
     $de2['ChkVerError'] = 'Verbindungsfehler.';
@@ -944,7 +953,7 @@ function et($tag){
     $de3['FileNoOverw'] = 'Datei konnte nicht ueberschrieben werden';
     $de3['FileOverw'] = 'Datei ueberschrieben';
     $de3['FileIgnored'] = 'Datei ignoriert';
-    $de3['ChkVer'] = 'Puefe sf.net fuer eine neuere Version';
+    $de3['ChkVer'] = 'Puefe eine neuere Version';
     $de3['ChkVerAvailable'] = 'Neue Version, hier klicken zum Download!!';
     $de3['ChkVerNotAvailable'] = 'Keine neuere Version vorhanden. :(';
     $de3['ChkVerError'] = 'Verbindungsfehler.';
@@ -1053,7 +1062,7 @@ function et($tag){
     $fr1['FileNoOverw'] = 'Le fichier ne peut pas etre écrasé';
     $fr1['FileOverw'] = 'Fichier écrasé';
     $fr1['FileIgnored'] = 'Fichier ignoré';
-    $fr1['ChkVer'] = 'Verifier sur sf.net une nouvelle version';
+    $fr1['ChkVer'] = 'Verifier nouvelle version';
     $fr1['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour la téléchager!!';
     $fr1['ChkVerNotAvailable'] = 'Aucune mise a jour de disponible. :(';
     $fr1['ChkVerError'] = 'Erreur de connection.';
@@ -1162,7 +1171,7 @@ function et($tag){
     $fr2['FileNoOverw'] = 'Fichier ne peut pas être écrasé';
     $fr2['FileOverw'] = 'Fichier écrasé';
     $fr2['FileIgnored'] = 'Fichier ignoré';
-    $fr2['ChkVer'] = 'Check sf.net pour nouvelle version';
+    $fr2['ChkVer'] = 'Check nouvelle version';
     $fr2['ChkVerAvailable'] = 'Nouvelle version, cliquez ici pour commencer le téléchargement!!';
     $fr2['ChkVerNotAvailable'] = 'Aucune nouvelle version disponible. :(';
     $fr2['ChkVerError'] = 'Erreur de connection.';
@@ -1271,7 +1280,7 @@ function et($tag){
     $fr3['FileNoOverw'] = 'Fichier ne pouvant être remplacé';
     $fr3['FileOverw'] = 'Fichier remplacé';
     $fr3['FileIgnored'] = 'Fichier ignoré';
-    $fr3['ChkVer'] = 'Vérifier sf.net pour une nouvelle version';
+    $fr3['ChkVer'] = 'Vérifier nouvelle version';
     $fr3['ChkVerAvailable'] = 'Nouvelle version, cliquer ici pour commencer le téléchargement !';
     $fr3['ChkVerNotAvailable'] = 'Pas de nouvelle version disponible. :(';
     $fr3['ChkVerError'] = 'Erreur de connection.';
@@ -1380,7 +1389,7 @@ function et($tag){
 	$nl['FileNoOverw'] = 'Bestand kan niet worden overgeschreven';
 	$nl['FileOverw'] = 'Bestand overgeschreven';
 	$nl['FileIgnored'] = 'Bestand genegeerd';
-	$nl['ChkVer'] = 'Controleer sf.net voor een nieuwe versie';
+	$nl['ChkVer'] = 'Controleer nieuwe versie';
 	$nl['ChkVerAvailable'] = 'Nieuwe versie, klik hier om de download te starten';
 	$nl['ChkVerNotAvailable'] = 'Geen nieuwe versie beschikbaar';
 	$nl['ChkVerError'] = 'Verbindingsfout.';
@@ -1489,7 +1498,7 @@ function et($tag){
     $it1['FileNoOverw'] = 'Il file non può essere sovrascritto';
     $it1['FileOverw'] = 'File sovrascritto';
     $it1['FileIgnored'] = 'File ignorato';
-    $it1['ChkVer'] = 'Controlla se è disponibile una nuova versione su sf.net';
+    $it1['ChkVer'] = 'Controlla se è disponibile una nuova versione';
     $it1['ChkVerAvailable'] = 'è disponibile una nuova versione: premi qui per scaricarla.';
     $it1['ChkVerNotAvailable'] = 'Non è disponibile nessuna nuova versione. :(';
     $it1['ChkVerError'] = 'Errore di connessione.';
@@ -1598,7 +1607,7 @@ function et($tag){
     $it2['FileNoOverw'] = 'Il file non potrebbe essere sovrascritto';
     $it2['FileOverw'] = 'File sovrascritto';
     $it2['FileIgnored'] = 'File ignorato';
-    $it2['ChkVer'] = 'Check sf.net per una nuova versione';
+    $it2['ChkVer'] = 'Check nuova versione';
     $it2['ChkVerAvailable'] = 'Nuova versione, clicca qui per iniziare il download!!';
     $it2['ChkVerNotAvailable'] = 'Nessuna nuova versione disponibile. :(';
     $it2['ChkVerError'] = 'Errore di connessione.';
@@ -1707,7 +1716,7 @@ function et($tag){
     $it3['FileNoOverw'] = 'Il file non pu&ograve; essere sovrascritto';
     $it3['FileOverw'] = 'File sovrascritto';
     $it3['FileIgnored'] = 'File ignorato';
-    $it3['ChkVer'] = 'Controlla la presnza di una nuova versione su sf.net';
+    $it3['ChkVer'] = 'Controlla la presnza di una nuova versione';
     $it3['ChkVerAvailable'] = 'Nuova versione, clicca qui per avviare il download!!';
     $it3['ChkVerNotAvailable'] = 'Nessuna nuova versione disponibile. :(';
     $it3['ChkVerError'] = 'Errore di connessione.';
@@ -2702,7 +2711,7 @@ function getmicrotime(){
    return ((float)$usec + (float)$sec);
 }
 function dir_list_form() {
-    global $fm_current_root,$current_dir,$quota_mb,$resolveIDs,$order_dir_list_by,$islinux,$cmd_name,$ip,$is_reachable,$path_info,$fm_color;
+    global $fm_current_root,$current_dir,$quota_mb,$resolveIDs,$order_dir_list_by,$islinux,$cmd_name,$ip,$path_info,$fm_color;
     $ti = getmicrotime();
     clearstatcache();
     $out = "<table border=0 cellspacing=1 cellpadding=4 width=\"100%\" bgcolor=\"#eeeeee\">\n";
@@ -3241,15 +3250,15 @@ function dir_list_form() {
                     $file_out[$file_count][] = "<td>".$dir_entry["extt"]."</td>";
                     // Opções de arquivo
                     if ( is_writable($current_dir.$file) ) $file_out[$file_count][] = "
-                                <td align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".$file."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
+                                <td align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".addslashes($file)."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
                     if ( is_writable($current_dir.$file) ) $file_out[$file_count][] = "
-                                <td align=center><a href=\"javascript:rename('$file')\">".et('Ren')."</a>";
+                                <td align=center><a href=\"javascript:rename('".addslashes($file)."')\">".et('Ren')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
                     if ( is_readable($current_dir.$file) && (strpos(".wav#.mp3#.mid#.avi#.mov#.mpeg#.mpg#.rm#.iso#.bin#.img#.dll#.psd#.fla#.swf#.class#.ppt#.tif#.tiff#.pcx#.jpg#.gif#.png#.wmf#.eps#.bmp#.msi#.exe#.com#.rar#.tar#.zip#.bz2#.tbz2#.bz#.tbz#.bzip#.gzip#.gz#.tgz#", $dir_entry["ext"]."#" ) === false)) $file_out[$file_count][] = "
                                 <td align=center><a href=\"javascript:edit_file('".addslashes($file)."')\">".et('Edit')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
-                    if( $is_reachable && is_readable($current_dir.$file) && (strpos(".txt#.sys#.bat#.ini#.conf#.swf#.php#.php3#.asp#.html#.htm#.jpg#.gif#.png#.bmp#", $dir_entry["ext"]."#" ) !== false)) $file_out[$file_count][] = "
+                    if ( is_readable($current_dir.$file) && (strpos(".txt#.sys#.bat#.ini#.conf#.swf#.php#.php3#.asp#.html#.htm#.jpg#.gif#.png#.bmp#", $dir_entry["ext"]."#" ) !== false)) $file_out[$file_count][] = "
                                 <td align=center><a href=\"javascript:view('".addslashes($file)."');\">".et('View')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
                     if ( is_readable($current_dir.$file) && strlen($dir_entry["ext"]) && (strpos(".tar#.zip#.bz2#.tbz2#.bz#.tbz#.bzip#.gzip#.gz#.tgz#", $dir_entry["ext"]."#" ) !== false)) $file_out[$file_count][] = "
@@ -3598,29 +3607,160 @@ function chmod_form(){
     </form>
     </body>\n</html>";
 }
+function get_mime_type($ext = ''){
+    $mimes = array(
+      'hqx'   =>  'application/mac-binhex40',
+      'cpt'   =>  'application/mac-compactpro',
+      'doc'   =>  'application/msword',
+      'bin'   =>  'application/macbinary',
+      'dms'   =>  'application/octet-stream',
+      'lha'   =>  'application/octet-stream',
+      'lzh'   =>  'application/octet-stream',
+      'exe'   =>  'application/octet-stream',
+      'class' =>  'application/octet-stream',
+      'psd'   =>  'application/octet-stream',
+      'so'    =>  'application/octet-stream',
+      'sea'   =>  'application/octet-stream',
+      'dll'   =>  'application/octet-stream',
+      'oda'   =>  'application/oda',
+      'pdf'   =>  'application/pdf',
+      'ai'    =>  'application/postscript',
+      'eps'   =>  'application/postscript',
+      'ps'    =>  'application/postscript',
+      'smi'   =>  'application/smil',
+      'smil'  =>  'application/smil',
+      'mif'   =>  'application/vnd.mif',
+      'xls'   =>  'application/vnd.ms-excel',
+      'ppt'   =>  'application/vnd.ms-powerpoint',
+      'pptx'  =>  'application/vnd.ms-powerpoint',
+      'wbxml' =>  'application/vnd.wap.wbxml',
+      'wmlc'  =>  'application/vnd.wap.wmlc',
+      'dcr'   =>  'application/x-director',
+      'dir'   =>  'application/x-director',
+      'dxr'   =>  'application/x-director',
+      'dvi'   =>  'application/x-dvi',
+      'gtar'  =>  'application/x-gtar',
+      'php'   =>  'application/x-httpd-php',
+      'php4'  =>  'application/x-httpd-php',
+      'php3'  =>  'application/x-httpd-php',
+      'phtml' =>  'application/x-httpd-php',
+      'phps'  =>  'application/x-httpd-php-source',
+      'js'    =>  'application/x-javascript',
+      'swf'   =>  'application/x-shockwave-flash',
+      'sit'   =>  'application/x-stuffit',
+      'tar'   =>  'application/x-tar',
+      'tgz'   =>  'application/x-tar',
+      'xhtml' =>  'application/xhtml+xml',
+      'xht'   =>  'application/xhtml+xml',
+      'zip'   =>  'application/zip',
+      'mid'   =>  'audio/midi',
+      'midi'  =>  'audio/midi',
+      'mpga'  =>  'audio/mpeg',
+      'mp2'   =>  'audio/mpeg',
+      'mp3'   =>  'audio/mpeg',
+      'aif'   =>  'audio/x-aiff',
+      'aiff'  =>  'audio/x-aiff',
+      'aifc'  =>  'audio/x-aiff',
+      'ram'   =>  'audio/x-pn-realaudio',
+      'rm'    =>  'audio/x-pn-realaudio',
+      'rpm'   =>  'audio/x-pn-realaudio-plugin',
+      'ra'    =>  'audio/x-realaudio',
+      'rv'    =>  'video/vnd.rn-realvideo',
+      'wav'   =>  'audio/x-wav',
+      'bmp'   =>  'image/bmp',
+      'gif'   =>  'image/gif',
+      'jpeg'  =>  'image/jpeg',
+      'jpg'   =>  'image/jpeg',
+      'jpe'   =>  'image/jpeg',
+      'png'   =>  'image/png',
+      'tiff'  =>  'image/tiff',
+      'tif'   =>  'image/tiff',
+      'css'   =>  'text/css',
+      'html'  =>  'text/html',
+      'htm'   =>  'text/html',
+      'shtml' =>  'text/html',
+      'txt'   =>  'text/plain',
+      'text'  =>  'text/plain',
+      'log'   =>  'text/plain',
+      'rtx'   =>  'text/richtext',
+      'rtf'   =>  'text/rtf',
+      'xml'   =>  'text/xml',
+      'xsl'   =>  'text/xml',
+      'mpeg'  =>  'video/mpeg',
+      'mpg'   =>  'video/mpeg',
+      'mpe'   =>  'video/mpeg',
+      'qt'    =>  'video/quicktime',
+      'mov'   =>  'video/quicktime',
+      'avi'   =>  'video/x-msvideo',
+      'movie' =>  'video/x-sgi-movie',
+      'doc'   =>  'application/msword',
+      'docx'  =>  'application/msword',
+      'word'  =>  'application/msword',
+      'xl'    =>  'application/excel',
+      'xls'   =>  'application/excel',
+      'xlsx'  =>  'application/excel',
+      'eml'   =>  'message/rfc822'
+    );
+    return (!isset($mimes[strtolower($ext)])) ? 'application/octet-stream' : $mimes[strtolower($ext)];
+}
 function view(){
-    global $doc_root,$path_info,$url_info,$current_dir,$islinux,$filename,$is_reachable;
-    html_header();
-    echo "<body marginwidth=\"0\" marginheight=\"0\">
-    <script language=\"Javascript\" type=\"text/javascript\">
-    <!--
-        window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);";
-    if ($is_reachable){
-        $url = $url_info["scheme"]."://".$url_info["host"];
-        if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
-        // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
-        $url .= str_replace($doc_root,"",$current_dir).$filename;
+    global $doc_root,$path_info,$url_info,$current_dir,$islinux,$filename,$passthru;
+	if (intval($passthru)){
+	    $file = $current_dir.$filename;
+	    if(file_exists($file)){
+	        $is_denied = false;
+	        foreach($download_ext_filter as $key=>$ext){
+	            if (eregi($ext,$filename)){
+	                $is_denied = true;
+	                break;
+	            }
+	        }
+	        if (!$is_denied){
+                if ($fh = fopen("$file", "rb")){
+	                fclose($fh);
+					$ext = pathinfo($file, PATHINFO_EXTENSION);
+					header("Pragma: public");
+					header("Expires: 0");
+					header("Connection: close");
+					header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+					header("Cache-Control: public");
+					header("Content-Description: File Transfer");
+					header("Content-Type: ".get_mime_type($ext));
+				    header("Content-Disposition: inline; filename=\"".pathinfo($file, PATHINFO_BASENAME)."\";");
+					header("Content-Transfer-Encoding: binary");
+					header("Content-Length: ".filesize($file));
+					@readfile($file);
+					exit();
+	            } else alert(et('ReadDenied').": ".$file);
+	        } else alert(et('ReadDenied').": ".$file);
+	    } else alert(et('FileNotFound').": ".$file);
         echo "
-        document.location.href='$url';";
-    } else {
+	    <script language=\"Javascript\" type=\"text/javascript\">
+	    <!--
+	        window.close();
+	    //-->
+	    </script>";
+	} else {
+	    html_header();
+	    echo "<body marginwidth=\"0\" marginheight=\"0\">";
+	    $is_reachable_thru_webserver = (stristr($current_dir,$doc_root)!==false);
+	    if ($is_reachable_thru_webserver){
+	        $url = $url_info["scheme"]."://".$url_info["host"];
+	        if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
+	        // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
+	        $url .= str_replace($doc_root,"",$current_dir).$filename;
+	    } else {
+			$url = addslashes($path_info["basename"])."?action=4&current_dir=".addslashes($current_dir)."&filename=".addslashes($filename)."&passthru=1";
+	    }
         echo "
-        alert('".et('OutDocRoot').":\\n".$doc_root."\\n');
-        window.close();";
-    }
-    echo "
-    //-->
-    </script>
-    </body>\n</html>";
+	    <script language=\"Javascript\" type=\"text/javascript\">
+	    <!--
+        	window.moveTo((window.screen.width-800)/2,((window.screen.height-600)/2)-20);
+	        document.location.href='$url';
+	    //-->
+	    </script>
+    	</body>\n</html>";
+	}
 }
 function edit_file_form(){
     global $current_dir,$filename,$file_data,$save_file,$path_info;
@@ -3682,7 +3822,6 @@ function config_form(){
                 $data = unserialize($data);
                 $ChkVerWarning = "<tr><td align=right> ";
                 if (is_array($data)&&count($data)){
-                    // sf.net logo
                     $ChkVerWarning .= "<a href=\"JavaScript:open_win('http://sourceforge.net')\">
                     <img src=\"http://sourceforge.net/sflogo.php?group_id=114392&type=1\" width=\"88\" height=\"31\" style=\"border: 1px solid #AAAAAA\" alt=\"SourceForge.net Logo\" />
 					</a>";
@@ -3731,18 +3870,54 @@ function config_form(){
     echo "<body marginwidth=\"0\" marginheight=\"0\">\n";
     echo "
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
-    <form name=\"config_form\" action=\"".$path_info["basename"]."\" method=\"post\">
-    <input type=hidden name=action value=2>
-    <input type=hidden name=config_action value=0>
     <tr><td colspan=2 align=center><b>".strtoupper(et('Configurations'))."</b></td></tr>
     </table>
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
-    <tr><td align=right width=\"1%\">".et('Version').":<td>$version</td></tr>
-    <tr><td align=right>".et('Size').":<td>".get_size($fm_self)."</td></tr>
-    <tr><td align=right>".et('Website').":<td><a href=\"JavaScript:open_win('http://phpfm.sf.net')\">http://phpfm.sf.net</a></td></tr>";
-    echo "<tr><td align=right><a href=\"http://sourceforge.net/donate/index.php?group_id=114392\"><img src=\"http://images.sourceforge.net/images/project-support.jpg\" width=\"88\" height=\"32\" border=\"0\" alt=\"Support This Project\" /></a><td><input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\"></td></tr>";
+	<form>
+    <tr><td align=right width=\"1%\">".et('Version').":<td>$version (".get_size($fm_self).")</td></tr>
+    <tr><td align=right>".et('Website').":<td><a href=\"JavaScript:open_win('http://phpfm.sf.net')\">http://phpfm.sf.net</a>&nbsp;&nbsp;&nbsp;<input type=button value=\"".et('ChkVer')."\" onclick=\"test_config_form(1)\"></td></tr>
+	</form>";
     if (strlen($ChkVerWarning)) echo $ChkVerWarning.$data['warnings'];
     echo "
+ 	<style type=\"text/css\">
+		.buymeabeer {
+		    background: url('http://phpfm.sf.net/img/buymeabeer.png') 0 0 no-repeat;
+		    text-indent: -9999px;
+		    width: 128px;
+		    height: 31px;
+            border: none;
+   			cursor: hand;
+   			cursor: pointer;
+		}
+		.buymeabeer:hover {
+		    background: url('http://phpfm.sf.net/img/buymeabeer.png') 0 -31px no-repeat;
+		}
+	</style>
+	<tr><td align=right>Like this project?</td><td>
+	<form name=\"buymeabeer_form\" action=\"https://www.paypal.com/cgi-bin/webscr\" method=\"post\">
+		<input type=\"hidden\" name=\"cmd\" value=\"_xclick\">
+		<input type=\"hidden\" name=\"business\" value=\"dulldusk@gmail.com\">
+		<input type=\"hidden\" name=\"lc\" value=\"BR\">
+		<input type=\"hidden\" name=\"item_name\" value=\"A Beer\">
+		<input type=\"hidden\" name=\"button_subtype\" value=\"services\">
+		<input type=\"hidden\" name=\"currency_code\" value=\"USD\">
+		<input type=\"hidden\" name=\"tax_rate\" value=\"0.000\">
+		<input type=\"hidden\" name=\"shipping\" value=\"0.00\">
+		<input type=\"hidden\" name=\"bn\" value=\"PP-BuyNowBF:btn_buynowCC_LG.gif:NonHostedGuest\">
+        <input type=\"submit\" class=\"buymeabeer\" value=\"buy me a beer\">
+	        <input type=\"hidden\" name=\"buyer_credit_promo_code\" value=\"\">
+	        <input type=\"hidden\" name=\"buyer_credit_product_category\" value=\"\">
+	        <input type=\"hidden\" name=\"buyer_credit_shipping_method\" value=\"\">
+	        <input type=\"hidden\" name=\"buyer_credit_user_address_change\" value=\"\">
+	        <input type=\"hidden\" name=\"tax\" value=\"0\">
+			<input type=\"hidden\" name=\"no_shipping\" value=\"1\">
+	        <input type=\"hidden\" name=\"return\" value=\"http://phpfm.sf.net\">
+	        <input type=\"hidden\" name=\"cancel_return\" value=\"http://phpfm.sf.net\">
+	</form>
+	</td></tr>
+    <form name=\"config_form\" action=\"".$path_info["basename"]."\" method=\"post\">
+    <input type=hidden name=action value=2>
+    <input type=hidden name=config_action value=0>
     <tr><td align=right width=1><nobr>".et('DocRoot').":</nobr><td>".$doc_root."</td></tr>
     <tr><td align=right><nobr>".et('FLRoot').":</nobr><td><input type=text size=60 name=newfm_root value=\"".$cfg->data['fm_root']."\" onkeypress=\"enterSubmit(event,'test_config_form(2)')\"></td></tr>
     <tr><td align=right>".et('Lang').":<td>
