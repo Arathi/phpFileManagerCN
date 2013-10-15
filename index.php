@@ -1,14 +1,14 @@
 <?php
-//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";s:0:"";s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.7";}
+//a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";i:1;s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.8";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
  +--------------------------------------------------
- | phpFileManager 0.9.7
+ | phpFileManager 0.9.8
  | By Fabricio Seger Kolling
- | Copyright (c) 2004-2012 Fabricio Seger Kolling
+ | Copyright (c) 2004-2013 Fabrício Seger Kolling
  | E-mail: dulldusk@gmail.com
  | URL: http://phpfm.sf.net
- | Last Changed: 2012-11-26
+ | Last Changed: 2013-10-15
  +--------------------------------------------------
  | OPEN SOURCE CONTRIBUTIONS
  +--------------------------------------------------
@@ -57,20 +57,29 @@
         $_POST = array_map('stripslashes_deep', $_POST);
         $_GET = array_map('stripslashes_deep', $_GET);
         $_COOKIE = array_map('stripslashes_deep', $_COOKIE);
-        $_REQUEST = array_map('stripslashes_deep', $_REQUEST);
     }
-	// Register Globals
-    foreach ($_GET as $key => $val) $$key=$val;
-    foreach ($_POST as $key => $val) $$key=$val;
-    foreach ($_COOKIE as $key => $val) $$key=$val;
 	// Server Vars
-    $ip = $_SERVER["REMOTE_ADDR"];
-    if (strlen($_SERVER["HTTP_X_FORWARDED_FOR"])) $ip = $_SERVER["HTTP_X_FORWARDED_FOR"]; // using proxy
-	if ($ip == "::1") $ip = "";
+    function get_client_ip() {
+        $ipaddress = '';
+        if ($_SERVER['HTTP_CLIENT_IP']) $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+        else if($_SERVER['HTTP_X_FORWARDED_FOR']) $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        else if($_SERVER['HTTP_X_FORWARDED']) $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+        else if($_SERVER['HTTP_FORWARDED_FOR']) $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+        else if($_SERVER['HTTP_FORWARDED']) $ipaddress = $_SERVER['HTTP_FORWARDED'];
+        else if($_SERVER['REMOTE_ADDR']) $ipaddress = $_SERVER['REMOTE_ADDR'];
+		// proxy transparente não esconde o IP local, colocando ele após o IP da rede, separado por vírgula
+		if (strpos($ipaddress, ',') !== false) {
+		    $ips = explode(',', $ipaddress);
+		    $ipaddress = trim($ips[0]);
+		}
+		if ($ipaddress == '::1') $ipaddress = '';
+        return $ipaddress;
+    }		
+    $ip = get_client_ip();
     $islinux = !(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
     function getServerURL() {
         $url = ($_SERVER["HTTPS"] == "on")?"https://":"http://";
-        $url .= $_SERVER["SERVER_NAME"]; // variável do servidor, $_SERVER["HTTP_HOST"] é equivalente
+        $url .= $_SERVER["SERVER_NAME"]; // $_SERVER["HTTP_HOST"] is equivalent
         if ($_SERVER["SERVER_PORT"] != "80") $url .= ":".$_SERVER["SERVER_PORT"];
         return $url;
     }
@@ -87,17 +96,25 @@
 	$doc_root = str_replace('//','/',str_replace(DIRECTORY_SEPARATOR,'/',$_SERVER["DOCUMENT_ROOT"]));
     $fm_self = $doc_root.$_SERVER["PHP_SELF"];
     $path_info = pathinfo($fm_self);
+	// Register Globals
+	$blockKeys = array('_SERVER','_SESSION','_GET','_POST','_COOKIE','charset','ip','islinux','url','url_info','doc_root','fm_self','path_info');
+    foreach ($_GET as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
+    foreach ($_POST as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
+    foreach ($_COOKIE as $key => $val) if (array_search($key,$blockKeys) === false) $$key=$val;
 // +--------------------------------------------------
 // | Config
 // +--------------------------------------------------
     $cfg = new config();
     $cfg->load();
-    ini_set("display_errors",1);
-    ini_set("error_reporting",$error_reporting);
+    switch ($error_reporting){
+        case 0: error_reporting(0); @ini_set("display_errors",0); break;
+        case 1: error_reporting(E_ERROR | E_PARSE | E_COMPILE_ERROR); @ini_set("display_errors",1); break;
+        case 2: error_reporting(E_ALL); @ini_set("display_errors",1); break;
+    }
     if (!isset($current_dir)){
         $current_dir = $path_info["dirname"]."/";
         if (!$islinux) $current_dir = ucfirst($current_dir);
-        //@chmod($current_dir,0777);
+        //@chmod($current_dir,0755);
     } else $current_dir = format_path($current_dir);
     // Auto Expand Local Path
     if (!isset($expanded_dir_list)){
@@ -178,10 +195,10 @@ class config {
             'quota_mb'=>0,
             'upload_ext_filter'=>array(),
             'download_ext_filter'=>array(),
-            'error_reporting'=>'',
+            'error_reporting'=>1,
             'fm_root'=>'',
             'cookie_cache_time'=>60*60*24*30, // 30 Days
-            'version'=>'0.9.7'
+            'version'=>'0.9.8'
             );
         $data = false;
         $this->filename = $fm_self;
@@ -2060,6 +2077,115 @@ function et($tag){
 	$ru['Seconds']='Секунд';
 	$ru['ErrorReport']='Отчет об ошибках';
 
+	// Catalan - by Pere Borràs AKA @Norl
+    $cat['Version'] = 'Versió';
+    $cat['DocRoot'] = 'Arrel del programa';
+    $cat['FLRoot'] = 'Arrel de l`administrador d`arxius';
+    $cat['Name'] = 'Nom';
+    $cat['And'] = 'i';
+    $cat['Enter'] = 'Entrar';
+    $cat['Send'] = 'Enviar';
+    $cat['Refresh'] = 'Refrescar';
+    $cat['SaveConfig'] = 'Desar configuracions';
+    $cat['SavePass'] = 'Desar clau';
+    $cat['SaveFile'] = 'Desar Arxiu';
+    $cat['Save'] = 'Desar';
+    $cat['Leave'] = 'Sortir';
+    $cat['Edit'] = 'Editar';
+    $cat['View'] = 'Mirar';
+    $cat['Config'] = 'Config.';
+    $cat['Ren'] = 'Canviar nom';
+    $cat['Rem'] = 'Esborrar';
+    $cat['Compress'] = 'Comprimir';
+    $cat['Decompress'] = 'Descomprimir';
+    $cat['ResolveIDs'] = 'Resoldre IDs';
+    $cat['Move'] = 'Moure';
+    $cat['Copy'] = 'Copiar';
+    $cat['ServerInfo'] = 'Info del Server';
+    $cat['CreateDir'] = 'Crear Directori';
+    $cat['CreateArq'] = 'Crear Arxiu';
+    $cat['ExecCmd'] = 'Executar Comandament';
+    $cat['Upload'] = 'Pujar';
+    $cat['UploadEnd'] = 'Pujat amb èxit';
+    $cat['Perm'] = 'Perm';
+    $cat['Perms'] = 'Permisos';
+    $cat['Owner'] = 'Propietari';
+    $cat['Group'] = 'Grup';
+    $cat['Other'] = 'Altre';
+    $cat['Size'] = 'Tamany';
+    $cat['Date'] = 'Data';
+    $cat['Type'] = 'Tipus';
+    $cat['Free'] = 'lliure';
+    $cat['Shell'] = 'Executar';
+    $cat['Read'] = 'Llegir';
+    $cat['Write'] = 'Escriure';
+    $cat['Exec'] = 'Executar';
+    $cat['Apply'] = 'Aplicar';
+    $cat['StickyBit'] = 'Sticky Bit';
+    $cat['Pass'] = 'Clau';
+    $cat['Lang'] = 'Llenguatje';
+    $cat['File'] = 'Arxius';
+    $cat['File_s'] = 'arxiu(s)';
+    $cat['Dir_s'] = 'directori(s)';
+    $cat['To'] = 'a';
+    $cat['Destination'] = 'Destí';
+    $cat['Configurations'] = 'Configuracions';
+    $cat['JSError'] = 'Error de JavaScript';
+    $cat['NoSel'] = 'No hi ha items seleccionats';
+    $cat['SelDir'] = 'Seleccioneu el directori de destí a l`arbre de la dreta';
+    $cat['TypeDir'] = 'Escrigui el nom del directori';
+    $cat['TypeArq'] = 'Escrigui el nom de l`arxiu';
+    $cat['TypeCmd'] = 'Escrigui el comandament';
+    $cat['TypeArqComp'] = 'Escrigui el nombre del directorio.\\nL`extensió definirà el tipus de compressió.\\nEx:\\nnom.zip\\nnom.tar\\nnom.bzip\\nnom.gzip';
+    $cat['RemSel'] = 'ESBORRAR items seleccionats';
+    $cat['NoDestDir'] = 'No s`ha seleccionat el directori de destí';
+    $cat['DestEqOrig'] = 'L`origen i el destí són iguals';
+    $cat['InvalidDest'] = 'El destí del directori és invàlid';
+    $cat['NoNewPerm'] = 'Els permisos no s`han pogut establir';
+    $cat['CopyTo'] = 'COPIAR a';
+    $cat['MoveTo'] = 'MOURE a';
+    $cat['AlterPermTo'] = 'CAMBIAR PERMISOS a';
+    $cat['ConfExec'] = 'Confirmar EXECUCIÓ';
+    $cat['ConfRem'] = 'Confirmar ESBORRAT';
+    $cat['EmptyDir'] = 'Directori buit';
+    $cat['IOError'] = 'Error I/O';
+    $cat['FileMan'] = 'PHP File Manager';
+    $cat['TypePass'] = 'Escrigui la clau';
+    $cat['InvPass'] = 'Clau invàlida';
+    $cat['ReadDenied'] = 'Accés de lectura denegat';
+    $cat['FileNotFound'] = 'Arxiu no trobat';
+    $cat['AutoClose'] = 'Tancar al completar';
+    $cat['OutDocRoot'] = 'Arxiu abans de DOCUMENT_ROOT';
+    $cat['NoCmd'] = 'Error: No s`ha escrit cap comandament';
+    $cat['ConfTrySave'] = 'Arxiu sense permisos d`escriptura.\\nIntenteu desar a un altre lloc';
+    $cat['ConfSaved'] = 'Configuració Desada';
+    $cat['PassSaved'] = 'Clau desada';
+    $cat['FileDirExists'] = 'Arxiu o directori ja existent';
+    $cat['NoPhpinfo'] = 'Funció phpinfo() no habilitada';
+    $cat['NoReturn'] = 'sense retorn';
+    $cat['FileSent'] = 'Arxiu enviat';
+    $cat['SpaceLimReached'] = 'Límit d`espaci al disc assolit';
+    $cat['InvExt'] = 'Extensió no vàlida';
+    $cat['FileNoOverw'] = 'L`arxiu no ha pogut ser sobreescrit';
+    $cat['FileOverw'] = 'Arxiu sobreescrit';
+    $cat['FileIgnored'] = 'Arxiu ignorat';
+    $cat['ChkVer'] = 'Revisar les actualitzacions';
+    $cat['ChkVerAvailable'] = 'Nova versió, feu clic aquí per descarregar';
+    $cat['ChkVerNotAvailable'] = 'La vostra versió és la més recent.';
+    $cat['ChkVerError'] = 'Error de connexió.';
+    $cat['Website'] = 'Lloc Web';
+    $cat['SendingForm'] = 'Enviant arxius, esperi';
+    $cat['NoFileSel'] = 'Cap arxiu seleccionat';
+    $cat['SelAll'] = 'Tots';
+    $cat['SelNone'] = 'Cap';
+    $cat['SelInverse'] = 'Invers';
+    $cat['Selected_s'] = 'seleccionat';
+    $cat['Total'] = 'total';
+    $cat['Partition'] = 'Partició';
+    $cat['RenderTime'] = 'Generat en';
+    $cat['Seconds'] = 'seg';
+    $cat['ErrorReport'] = 'Informe d`error';
+
     $lang_ = $$lang;
     if (isset($lang_[$tag])) return html_encode($lang_[$tag]);
     //else return "[$tag]"; // So we can know what is missing
@@ -2083,7 +2209,7 @@ function total_size($arg) {
 }
 function total_delete($arg) {
     if (file_exists($arg)) {
-        @chmod($arg,0777);
+        @chmod($arg,0755);
         if (is_dir($arg)) {
             $handle = opendir($arg);
             while($aux = readdir($handle)) {
@@ -2098,7 +2224,7 @@ function total_copy($orig,$dest) {
     $ok = true;
     if (file_exists($orig)) {
         if (is_dir($orig)) {
-            mkdir($dest,0777);
+            mkdir($dest,0755);
             $handle = opendir($orig);
             while(($aux = readdir($handle))&&($ok)) {
                 if ($aux != "." && $aux != "..") $ok = total_copy($orig."/".$aux,$dest."/".$aux);
@@ -2169,17 +2295,17 @@ function save_upload($temp_file,$filename,$dir_dest) {
         }
     }
     if (!$is_denied){
-        if (!limite($filesize)){
+        if (!check_limit($filesize)){
             if (file_exists($file)){
                 if (unlink($file)){
                     if (copy($temp_file,$file)){
-                        chmod($file,0777);
+                        @chmod($file,0755);
                         $out = 6;
                     } else $out = 2;
                 } else $out = 5;
             } else {
                 if (copy($temp_file,$file)){
-                    chmod($file,0777);
+                    @chmod($file,0755);
                     $out = 1;
                 } else $out = 2;
             }
@@ -2200,7 +2326,7 @@ function zip_extract(){
                 foreach(explode('/',$complete_path) AS $k) {
                     $tmp .= $k.'/';
                     if(!file_exists($tmp)) {
-                        @mkdir($current_dir.$tmp, 0777);
+                        @mkdir($current_dir.$tmp, 0755);
                     }
                 }
             }
@@ -2220,7 +2346,10 @@ function zip_extract(){
 // | Data Formating
 // +--------------------------------------------------
 function html_encode($str){
-	return preg_replace(array('/&/', '/</', '/>/', '/"/'), array('&amp;', '&lt;', '&gt;', '&quot;'), $str);  // Bypass PHP to allow any charset!!
+	global $charSet;
+	$str = preg_replace(array('/&/', '/</', '/>/', '/"/'), array('&amp;', '&lt;', '&gt;', '&quot;'), $str);  // Bypass PHP to allow any charset!!
+    $str = htmlentities($str, ENT_QUOTES, $charSet, false);
+	return $str;
 }
 function rep($x,$y){
   if ($x) {
@@ -2318,7 +2447,7 @@ function format_size($arg) {
 function get_size($file) {
     return format_size(filesize($file));
 }
-function limite($new_filesize=0) {
+function check_limit($new_filesize=0) {
     global $fm_current_root;
     global $quota_mb;
     if($quota_mb){
@@ -2327,7 +2456,7 @@ function limite($new_filesize=0) {
     }
     return false;
 }
-function get_user ($arg) {
+function get_user($arg) {
     global $mat_passwd;
     $aux = "x:".trim($arg).":";
     for($x=0;$x<count($mat_passwd);$x++){
@@ -2338,7 +2467,7 @@ function get_user ($arg) {
     }
     return $arg;
 }
-function get_group ($arg) {
+function get_group($arg) {
     global $mat_group;
     $aux = "x:".trim($arg).":";
     for($x=0;$x<count($mat_group);$x++){
@@ -2348,6 +2477,14 @@ function get_group ($arg) {
         }
     }
     return $arg;
+}
+function uppercase($str){
+	global $charset;
+    return mb_strtoupper($str, $charset);
+}
+function lowercase($str){
+	global $charset;
+    return mb_strtolower($str, $charset);
 }
 // +--------------------------------------------------
 // | Interface
@@ -2683,7 +2820,7 @@ function show_tree(){
         for($x=0;$x<strlen($aux);$x++){
 			if ($handle = opendir($aux[$x].":/")){
     			@closedir($handle);
-	            if (strstr(strtoupper($fm_current_root),$aux[$x].":/")) $is_sel="selected";
+	            if (strstr(uppercase($fm_current_root),$aux[$x].":/")) $is_sel="selected";
 	            else $is_sel="";
 	            echo "<option $is_sel value=\"".$aux[$x].":/\">".$aux[$x].":/";
 			}
@@ -2726,7 +2863,7 @@ function dir_list_form() {
 			$entry_list[$entry_count]["sizet"] = 0;
 			$entry_list[$entry_count]["type"] = "none";
             if (is_file($current_dir.$file)){
-                $ext = strtolower(strrchr($file,"."));
+                $ext = lowercase(strrchr($file,"."));
                 $entry_list[$entry_count]["type"] = "file";
                 // Função filetype() returns only "file"...
                 $entry_list[$entry_count]["size"] = filesize($current_dir.$file);
@@ -2951,6 +3088,7 @@ function dir_list_form() {
         }
         // Select all/none/inverse
         function selectANI(Butt){
+        	cancel_copy_move();
             for(var x=0;x<". (integer)count($entry_list).";x++){
                 var Row = document.getElementById('entry'+x);
                 var newClassName = null;
@@ -2974,9 +3112,13 @@ function dir_list_form() {
                 }
             }
             if (Butt.value == '".et('SelAll')."'){
-                Butt.value = '".et('SelNone')."';
+                for(var i=0;i<2;i++){
+                    document.getElementById('ANI'+i).value='".et('SelNone')."';
+                }
             } else if (Butt.value == '".et('SelNone')."'){
-                Butt.value = '".et('SelAll')."';
+                for(var i=0;i<2;i++){
+                    document.getElementById('ANI'+i).value='".et('SelAll')."';
+                }
             }
             update_sel_status();
             return true;
@@ -3000,7 +3142,7 @@ function dir_list_form() {
             }
         }
         function decompress(arg){
-            if(confirm('".strtoupper(et('Decompress'))." \\' '+arg+' \\' ?')) {
+            if(confirm('".uppercase(et('Decompress'))." \\' '+arg+' \\' ?')) {
                 document.form_action.action.value = 72;
                 document.form_action.cmd_arg.value = arg;
                 document.form_action.submit();
@@ -3018,7 +3160,7 @@ function dir_list_form() {
         function edit_file(arg){
             var w = 1024;
             var h = 768;
-            // if(confirm('".strtoupper(et('Edit'))." \\' '+arg+' \\' ?')) 
+            // if(confirm('".uppercase(et('Edit'))." \\' '+arg+' \\' ?'))
             window.open('".addslashes($path_info["basename"])."?action=7&current_dir=".addslashes($current_dir)."&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
         }
         function config(){
@@ -3039,11 +3181,11 @@ function dir_list_form() {
         function view(arg){
             var w = 800;
             var h = 600;
-            if(confirm('".strtoupper(et('View'))." \\' '+arg+' \\' ?')) window.open('".addslashes($path_info["basename"])."?action=4&current_dir=".addslashes($current_dir)."&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes');
+            if(confirm('".uppercase(et('View'))." \\' '+arg+' \\' ?')) window.open('".addslashes($path_info["basename"])."?action=4&current_dir=".addslashes($current_dir)."&filename='+escape(arg), '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=yes,resizable=yes,status=yes,toolbar=no,menubar=no,location=yes');
         }
         function rename(arg){
             var nome = '';
-            if (nome = prompt('".strtoupper(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=3&current_dir=".addslashes($current_dir)."&old_name='+escape(arg)+'&new_name='+escape(nome);
+            if (nome = prompt('".uppercase(et('Ren'))." \\' '+arg+' \\' ".et('To')." ...')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=3&current_dir=".addslashes($current_dir)."&old_name='+escape(arg)+'&new_name='+escape(nome);
         }
         function set_dir_dest(arg){
             document.form_action.dir_dest.value=arg;
@@ -3056,19 +3198,22 @@ function dir_list_form() {
             if (!is_anything_selected()) alert('".et('NoSel').".');
             else {
                 if (!getCookie('sel_dir_warn')) {
-                    // alert('".et('SelDir').".');
+                    //alert('".et('SelDir').".');
                     document.cookie='sel_dir_warn'+'='+escape('true')+';';
                 }
+                set_sel_dir_warn(true);
                 parent.frame2.set_flag(true);
             }
         }
-        function set_chmod_arg(arg){
-            document.form_action.chmod_arg.value=arg;
-            if (document.form_action.action.value.length>0) test(document.form_action.action.value);
-            else alert('".et('JSError')."');
-        }
-        function chmod(arg){
-            document.form_action.action.value = arg;
+		function set_sel_dir_warn(b){
+        	document.getElementById(\"sel_dir_warn\").style.display=(b?'':'none');
+		}
+		function cancel_copy_move(){
+           	set_sel_dir_warn(false);
+           	parent.frame2.set_flag(false);
+		}
+        function chmod_form(){
+            cancel_copy_move();
             document.form_action.dir_dest.value='';
             document.form_action.chmod_arg.value='';
             if (!is_anything_selected()) alert('".et('NoSel').".');
@@ -3078,12 +3223,22 @@ function dir_list_form() {
                 window.open('".addslashes($path_info["basename"])."?action=8', '', 'width='+w+',height='+h+',fullscreen=no,scrollbars=no,resizable=yes,status=no,toolbar=no,menubar=no,location=no');
             }
         }
+        function set_chmod_arg(arg){
+            cancel_copy_move();
+            if (!is_anything_selected()) alert('".et('NoSel').".');
+            else {
+            	document.form_action.dir_dest.value='';
+            	document.form_action.chmod_arg.value=arg;
+            	test(9);
+			}
+        }
         function test_action(){
             if (document.form_action.action.value != 0) return true;
             else return false;
         }
         function test_prompt(arg){
-            var erro='';
+        	cancel_copy_move();
+			var erro='';
             var conf='';
             if (arg == 1){
                 document.form_action.cmd_arg.value = prompt('".et('TypeDir').".');
@@ -3121,6 +3276,7 @@ function dir_list_form() {
             alert(str);
         }
         function test(arg){
+        	cancel_copy_move();
             var erro='';
             var conf='';
             if (arg == 4){
@@ -3141,7 +3297,7 @@ function dir_list_form() {
             } else if (arg == 9){
                 if (!is_anything_selected()) erro = '".et('NoSel').".';
                 else if(document.form_action.chmod_arg.value.length == 0) erro = '".et('NoNewPerm').".';
-                conf = '".et('AlterPermTo')." \\' '+document.form_action.chmod_arg.value+' \\' ?\\n';
+                //conf = '".et('AlterPermTo')." \\' '+document.form_action.chmod_arg.value+' \\' ?\\n';
             }
             if (erro!=''){
                 document.form_action.cmd_arg.focus();
@@ -3150,7 +3306,9 @@ function dir_list_form() {
                 if(confirm(conf)) {
                     document.form_action.action.value = arg;
                     document.form_action.submit();
-                }
+                } else {
+                    set_sel_dir_warn(false);
+				}
             } else {
                 document.form_action.action.value = arg;
                 document.form_action.submit();
@@ -3193,7 +3351,7 @@ function dir_list_form() {
                 <tr bgcolor=\"#DDDDDD\"><td colspan=50><nobr>$uplink <a href=\"".$path_info["basename"]."?frame=3&current_dir=$current_dir\">$current_dir</a></nobr>
                 <tr>
                 <td bgcolor=\"#DDDDDD\" colspan=50><nobr>
-                    <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" value=\"".et('SelAll')."\">
+                    <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" id=\"ANI0\" value=\"".et('SelAll')."\">
                     <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" value=\"".et('SelInverse')."\">
                     <input type=\"button\" style=\"width:80\" onclick=\"test(4)\" value=\"".et('Rem')."\">
                     <input type=\"button\" style=\"width:80\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
@@ -3202,9 +3360,12 @@ function dir_list_form() {
             if ($islinux) $out .= "
                     <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
             $out .= "
-                    <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
+                    <input type=\"button\" style=\"width:100\" onclick=\"chmod_form()\" value=\"".et('Perms')."\">";
             $out .= "
                 </nobr></td>
+                </tr>
+				<tr>
+                <td bgcolor=\"#DDDDDD\" colspan=50 id=\"sel_dir_warn\" style=\"display:none\"><nobr><font color=\"red\">".et('SelDir')."...</font></nobr></td>
                 </tr>";
             $file_count = 0;
             $dir_count = 0;
@@ -3250,7 +3411,7 @@ function dir_list_form() {
                     $file_out[$file_count][] = "<td>".$dir_entry["extt"]."</td>";
                     // Opções de arquivo
                     if ( is_writable($current_dir.$file) ) $file_out[$file_count][] = "
-                                <td align=center><a href=\"javascript:if(confirm('".strtoupper(et('Rem'))." \\'".addslashes($file)."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
+                                <td align=center><a href=\"javascript:if(confirm('".uppercase(et('Rem'))." \\'".addslashes($file)."\\' ?')) document.location.href='".addslashes($path_info["basename"])."?frame=3&action=8&cmd_arg=".addslashes($file)."&current_dir=".addslashes($current_dir)."'\">".et('Rem')."</a>";
                     else $file_out[$file_count][] = "<td>&nbsp;</td>";
                     if ( is_writable($current_dir.$file) ) $file_out[$file_count][] = "
                                 <td align=center><a href=\"javascript:rename('".addslashes($file)."')\">".et('Ren')."</a>";
@@ -3324,7 +3485,7 @@ function dir_list_form() {
             $out .= "
                 <tr>
                 <td bgcolor=\"#DDDDDD\" colspan=50><nobr>
-                      <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" value=\"".et('SelAll')."\">
+                      <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" id=\"ANI1\" value=\"".et('SelAll')."\">
                       <input type=\"button\" style=\"width:80\" onclick=\"selectANI(this)\" value=\"".et('SelInverse')."\">
                       <input type=\"button\" style=\"width:80\" onclick=\"test(4)\" value=\"".et('Rem')."\">
                       <input type=\"button\" style=\"width:80\" onclick=\"sel_dir(5)\" value=\"".et('Copy')."\">
@@ -3333,7 +3494,7 @@ function dir_list_form() {
             if ($islinux) $out .= "
                       <input type=\"button\" style=\"width:100\" onclick=\"resolveIDs()\" value=\"".et('ResolveIDs')."\">";
             $out .= "
-                      <input type=\"button\" style=\"width:100\" onclick=\"chmod(9)\" value=\"".et('Perms')."\">";
+                      <input type=\"button\" style=\"width:100\" onclick=\"chmod_form()\" value=\"".et('Perms')."\">";
             $out .= "
                 </nobr></td>
                 </tr>";
@@ -3346,7 +3507,7 @@ function dir_list_form() {
                 <tr><td bgcolor=\"#DDDDDD\" colspan=50><b>".et('Partition').": ".format_size(($quota_mb*1024*1024))." ".et('Total')." - ".format_size(($quota_mb*1024*1024)-total_size($fm_current_root))." ".et('Free')."</td></tr>";
             } else {
                 $out .= "
-                <tr><td bgcolor=\"#DDDDDD\" colspan=50><b>".et('Partition').": ".format_size(disk_total_space($current_dir))." ".et('Total')." - ".format_size(disk_free_space($fm_current_root))." ".et('Free')."</td></tr>";
+                <tr><td bgcolor=\"#DDDDDD\" colspan=50><b>".et('Partition').": ".format_size(disk_total_space($current_dir))." ".et('Total')." - ".format_size(disk_free_space($current_dir))." ".et('Free')."</td></tr>";
             }
             $tf = getmicrotime();
             $tt = ($tf - $ti);
@@ -3541,9 +3702,15 @@ function chmod_form(){
         if (!nototals) document.chmod_form.t_total.value = sticky + totals[0] + totals[1] + totals[2];
         document.chmod_form.sym_total.value = syms[0] + syms[1] + syms[2] + sticky_sym;
     }
-    function troca(){
-        if(document.chmod_form.sticky.checked){document.chmod_form.sticky.checked=false;}else{document.chmod_form.sticky.checked=true;}
+    function sticky_change(){
+        document.chmod_form.sticky.checked = !(document.chmod_form.sticky.checked);
     }
+	function apply_chmod(){
+        if (confirm('".et('AlterPermTo')." \\' '+document.chmod_form.t_total.value+' \\' ?\\n')){
+            window.opener.set_chmod_arg(document.chmod_form.t_total.value);
+			window.close();
+		}
+	}
 
     window.onload=octalchange
     window.moveTo((window.screen.width-400)/2,((window.screen.height-200)/2)-20);
@@ -3554,7 +3721,7 @@ function chmod_form(){
     <TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\" ALIGN=CENTER>
     <tr><th colspan=4>".et('Perms')."</th></tr>
     <TR ALIGN=\"LEFT\" VALIGN=\"MIDDLE\">
-    <TD><input type=\"text\" name=\"t_total\" value=\"0777\" size=\"4\" onKeyUp=\"octalchange()\"> </TD>
+    <TD><input type=\"text\" name=\"t_total\" value=\"0755\" size=\"4\" onKeyUp=\"octalchange()\"> </TD>
     <TD><input type=\"text\" name=\"sym_total\" value=\"\" size=\"12\" READONLY=\"1\"></TD>
     </TR>
     </TABLE>
@@ -3602,7 +3769,7 @@ function chmod_form(){
     </tr>
     </TABLE>
     <TABLE BORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"4\" ALIGN=CENTER>
-    <tr><td colspan=2><input type=checkbox name=sticky value=\"1\" onclick=\"calc_chmod()\"> <a href=\"JavaScript:troca();\">".et('StickyBit')."</a><td colspan=2 align=right><input type=button value=\"".et('Apply')."\" onClick=\"window.opener.set_chmod_arg(document.chmod_form.t_total.value); window.close();\"></tr>
+    <tr><td colspan=2><input type=checkbox name=sticky value=\"1\" onclick=\"calc_chmod()\"> <a href=\"JavaScript:sticky_change();\">".et('StickyBit')."</a><td colspan=2 align=right><input type=button value=\"".et('Apply')."\" onClick=\"apply_chmod()\"></tr>
     </table>
     </form>
     </body>\n</html>";
@@ -3701,7 +3868,7 @@ function get_mime_type($ext = ''){
       'xlsx'  =>  'application/excel',
       'eml'   =>  'message/rfc822'
     );
-    return (!isset($mimes[strtolower($ext)])) ? 'application/octet-stream' : $mimes[strtolower($ext)];
+    return (!isset($mimes[lowercase($ext)])) ? 'application/octet-stream' : $mimes[lowercase($ext)];
 }
 function view(){
     global $doc_root,$path_info,$url_info,$current_dir,$islinux,$filename,$passthru;
@@ -3719,13 +3886,15 @@ function view(){
                 if ($fh = fopen("$file", "rb")){
 	                fclose($fh);
 					$ext = pathinfo($file, PATHINFO_EXTENSION);
+					$ctype = get_mime_type($ext);
+					if ($ctype == "application/octet-stream") $ctype = "text/plain";
 					header("Pragma: public");
 					header("Expires: 0");
 					header("Connection: close");
 					header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 					header("Cache-Control: public");
 					header("Content-Description: File Transfer");
-					header("Content-Type: ".get_mime_type($ext));
+					header("Content-Type: ".$ctype);
 				    header("Content-Disposition: inline; filename=\"".pathinfo($file, PATHINFO_BASENAME)."\";");
 					header("Content-Transfer-Encoding: binary");
 					header("Content-Length: ".filesize($file));
@@ -3748,7 +3917,7 @@ function view(){
 	        $url = $url_info["scheme"]."://".$url_info["host"];
 	        if (strlen($url_info["port"])) $url .= ":".$url_info["port"];
 	        // Malditas variaveis de sistema!! No windows doc_root é sempre em lowercase... cadê o str_ireplace() ??
-	        $url .= str_replace($doc_root,"",$current_dir).$filename;
+	        $url .= str_replace($doc_root,"","/".$current_dir).$filename;
 	    } else {
 			$url = addslashes($path_info["basename"])."?action=4&current_dir=".addslashes($current_dir)."&filename=".addslashes($filename)."&passthru=1";
 	    }
@@ -3870,7 +4039,7 @@ function config_form(){
     echo "<body marginwidth=\"0\" marginheight=\"0\">\n";
     echo "
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
-    <tr><td colspan=2 align=center><b>".strtoupper(et('Configurations'))."</b></td></tr>
+    <tr><td colspan=2 align=center><b>".uppercase(et('Configurations'))."</b></td></tr>
     </table>
     <table border=0 cellspacing=0 cellpadding=5 align=center width=\"100%\">
 	<form>
@@ -3922,6 +4091,7 @@ function config_form(){
     <tr><td align=right><nobr>".et('FLRoot').":</nobr><td><input type=text size=60 name=newfm_root value=\"".$cfg->data['fm_root']."\" onkeypress=\"enterSubmit(event,'test_config_form(2)')\"></td></tr>
     <tr><td align=right>".et('Lang').":<td>
 	<select name=newlang>
+    	<option value=cat>Catalan - by Pere Borràs AKA @Norl
         <option value=nl>Dutch - by Leon Buijs
 		<option value=en>English - by Fabricio Seger Kolling
 		<option value=fr1>French - by Jean Bilwes
@@ -3940,7 +4110,11 @@ function config_form(){
         <option value=ru>Russian - by Евгений Рашев
         <option value=tr>Turkish - by Necdet Yazilimlari
 	</select></td></tr>
-    <tr><td align=right>".et('ErrorReport').":<td><select name=newerror><option value=\"\">NONE<option value=\"".E_ALL."\">E_ALL<option value=\"".E_ERROR."\">E_ERROR<option value=\"".(E_ERROR | E_WARNING)."\">E_ERROR & E_WARNING<option value=\"".(E_ERROR | E_WARNING | E_NOTICE)."\">E_ERROR & E_WARNING & E_NOTICE</select></td></tr>
+    <tr><td align=right>".et('ErrorReport').":<td><select name=newerror>
+	<option value=\"0\">Disabled
+	<option value=\"1\">Show Errors
+	<option value=\"2\">Show Errors, Warnings and Notices
+	</select></td></tr>
     <tr><td> <td><input type=button value=\"".et('SaveConfig')."\" onclick=\"test_config_form(2)\">";
     if (strlen($Warning1)) echo " <font color=red>$Warning1</font>";
     echo "
@@ -4014,7 +4188,8 @@ function shell_form(){
             <!--";
             if (strlen($data_out)) echo "
                 var val = '# ".html_encode($cmd_arg)."\\n".html_encode(str_replace("<","[",str_replace(">","]",str_replace("\n","\\n",str_replace("'","\'",str_replace("\\","\\\\",$data_out))))))."\\n';
-                parent.frame1.document.data_form.data_out.value += val;";
+                parent.frame1.document.data_form.data_out.value += val;
+				parent.frame1.document.data_form.data_out.scrollTop = parent.frame1.document.data_form.data_out.scrollHeight;";
             echo "
                 document.shell_form.cmd_arg.focus();
             //-->
@@ -4064,7 +4239,7 @@ function server_info(){
     $safe_mode=trim(ini_get("safe_mode"));
     if ((strlen($safe_mode)==0)||($safe_mode==0)) $safe_mode=false;
     else $safe_mode=true;
-    $is_windows_server = (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+    $is_windows_server = (uppercase(substr(PHP_OS, 0, 3)) === 'WIN');
     echo "<tr><td colspan=2>".php_uname();
     echo "<tr><td>safe_mode<td>".($safe_mode?"on":"off");
     if ($is_windows_server) echo "<tr><td>sisop<td>Windows<br>";
@@ -4192,8 +4367,8 @@ function frame3(){
             if (strlen($cmd_arg)){
                 $cmd_arg = format_path($current_dir.$cmd_arg);
                 if (!file_exists($cmd_arg)){
-                    mkdir($cmd_arg,0777);
-                    chmod($cmd_arg,0777);
+                    @mkdir($cmd_arg,0755);
+                    @chmod($cmd_arg,0755);
                     reloadframe("parent",2,"&ec_dir=".$cmd_arg);
                 } else alert(et('FileDirExists').".");
             }
@@ -4205,7 +4380,7 @@ function frame3(){
                     if ($fh = @fopen($cmd_arg, "w")){
                         @fclose($fh);
                     }
-                    chmod($cmd_arg,0666);
+                    @chmod($cmd_arg,0644);
                 } else alert(et('FileDirExists').".");
             }
             break;
@@ -4240,7 +4415,7 @@ function frame3(){
             break;
             case 5: // copy sel
             if (strlen($dir_dest)){
-                if(strtoupper($dir_dest) != strtoupper($current_dir)){
+                if(uppercase($dir_dest) != uppercase($current_dir)){
                     if (strlen($selected_file_list)){
                         $selected_file_list = explode("<|*|>",$selected_file_list);
                         if (count($selected_file_list)) {
@@ -4266,7 +4441,7 @@ function frame3(){
             break;
             case 6: // move sel
             if (strlen($dir_dest)){
-                if(strtoupper($dir_dest) != strtoupper($current_dir)){
+                if(uppercase($dir_dest) != uppercase($current_dir)){
                     if (strlen($selected_file_list)){
                         $selected_file_list = explode("<|*|>",$selected_file_list);
                         if (count($selected_file_list)) {
@@ -4353,10 +4528,24 @@ function frame3(){
                 if ($chmod_arg[0]=="1") $chmod_arg = "0".$chmod_arg;
                 else $chmod_arg = "0".substr($chmod_arg,strlen($chmod_arg)-3);
                 $new_mod = octdec($chmod_arg);
-                $selected_file_list = explode("<|*|>",$selected_file_list);
-                if (count($selected_file_list)) for($x=0;$x<count($selected_file_list);$x++) @chmod($current_dir.$selected_file_list[$x],$new_mod);
-                $selected_dir_list = explode("<|*|>",$selected_dir_list);
-                if (count($selected_dir_list)) for($x=0;$x<count($selected_dir_list);$x++) @chmod($current_dir.$selected_dir_list[$x],$new_mod);
+                if (strlen($selected_file_list)){
+                    $selected_file_list = explode("<|*|>",$selected_file_list);
+                    if (count($selected_file_list)) {
+                        for($x=0;$x<count($selected_file_list);$x++) {
+                            $selected_file_list[$x] = trim($selected_file_list[$x]);
+                            if (strlen($selected_file_list[$x])) @chmod($current_dir.$selected_file_list[$x],$new_mod);
+                        }
+                    }
+                }
+                if (strlen($selected_dir_list)){
+                    $selected_dir_list = explode("<|*|>",$selected_dir_list);
+                    if (count($selected_dir_list)) {
+                        for($x=0;$x<count($selected_dir_list);$x++) {
+                            $selected_dir_list[$x] = trim($selected_dir_list[$x]);
+                            if (strlen($selected_dir_list[$x])) @chmod($current_dir.$selected_dir_list[$x],$new_mod);
+                        }
+                    }
+                }
             }
             break;
         }
@@ -4536,7 +4725,7 @@ class archive
         if($this->options['inmemory'] == 0)
         {
             fclose($this->archive);
-            chmod($this->options['name'],0666);
+            @chmod($this->options['name'],0644);
             if($this->options['type'] == "gzip" || $this->options['type'] == "bzip")
             {
                 unlink($this->options['basedir'] . "/" . $this->options['name'] . ".tmp");
@@ -4923,7 +5112,7 @@ class tar_file extends archive
                     {
                         if(!is_dir($file['name']))
                         {
-                            mkdir($file['name'],0777);
+                            mkdir($file['name'],0755);
                             //mkdir($file['name'],$file['stat'][2]);
                             //chown($file['name'],$file['stat'][4]);
                             //chgrp($file['name'],$file['stat'][5]);
@@ -4938,7 +5127,7 @@ class tar_file extends archive
                         fwrite($new,fread($fp,$file['stat'][7]));
                         fread($fp,(512 - $file['stat'][7] % 512) == 512? 0 : (512 - $file['stat'][7] % 512));
                         fclose($new);
-                        chmod($file['name'],0666);
+                        @chmod($file['name'],0644);
                         //chmod($file['name'],$file['stat'][2]);
                         //chown($file['name'],$file['stat'][4]);
                         //chgrp($file['name'],$file['stat'][5]);
