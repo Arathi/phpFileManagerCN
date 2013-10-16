@@ -2296,7 +2296,15 @@ function et($tag){
     $cat['ErrorReport'] = 'Informe d`error';
 
     $lang_ = $$lang;
-    if (isset($lang_[$tag])) return html_encode($lang_[$tag]);
+    if (isset($lang_[$tag]))
+    {
+        if ( true ) //$lang=='cn'
+        {
+            return $lang_[$tag];
+        }
+        else 
+            return html_encode($lang_[$tag]);
+    }
     //else return "[$tag]"; // So we can know what is missing
     return $en[$tag];
 }
