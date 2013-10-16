@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 //a:9:{s:4:"lang";s:2:"en";s:9:"auth_pass";s:32:"d41d8cd98f00b204e9800998ecf8427e";s:8:"quota_mb";i:0;s:17:"upload_ext_filter";a:0:{}s:19:"download_ext_filter";a:0:{}s:15:"error_reporting";i:1;s:7:"fm_root";s:0:"";s:17:"cookie_cache_time";i:2592000;s:7:"version";s:5:"0.9.8";}
 /*--------------------------------------------------
  | PHP FILE MANAGER
@@ -4203,6 +4203,7 @@ function config_form(){
     	<option value=cat>Catalan - by Pere Borràs AKA @Norl
         <option value=nl>Dutch - by Leon Buijs
 		<option value=en>English - by Fabricio Seger Kolling
+		<option value=cn>Chinese - by Arathi
 		<option value=fr1>French - by Jean Bilwes
         <option value=fr2>French - by Sharky
         <option value=fr3>French - by Michel Lainey
