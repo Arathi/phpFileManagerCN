@@ -190,7 +190,7 @@ class config {
     function config(){
         global $fm_self;
         $this->data = array(
-            'lang'=>'en',
+            'lang'=>'cn',
             'auth_pass'=>md5(''),
             'quota_mb'=>0,
             'upload_ext_filter'=>array(),
