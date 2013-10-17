@@ -363,7 +363,7 @@ function et($tag){
     $cn['Rem'] = '删除';
     $cn['Compress'] = '压缩';
     $cn['Decompress'] = '解压';
-    $cn['ResolveIDs'] = 'Resolve IDs';
+    $cn['ResolveIDs'] = '权限表示形式';
     $cn['Move'] = '移动';
     $cn['Copy'] = '复制';
     $cn['ServerInfo'] = '服务器信息';
@@ -386,7 +386,7 @@ function et($tag){
     $cn['Write'] = '写';
     $cn['Exec'] = '执行';
     $cn['Apply'] = '应用';
-    $cn['StickyBit'] = 'Sticky Bit';
+    $cn['StickyBit'] = '粘住位';
     $cn['Pass'] = '密码';
     $cn['Lang'] = '语言';
     $cn['File'] = '文件';
@@ -401,7 +401,7 @@ function et($tag){
     $cn['TypeDir'] = '请输入目录名';
     $cn['TypeArq'] = '请输入文件名';
     $cn['TypeCmd'] = '请输入命令';
-    $cn['TypeArqComp'] = '请输入文件名.扩展名将确定其压缩格式.\\n如:file.zip, file.tar, file.bzip, file.gzip';
+    $cn['TypeArqComp'] = '请输入文件名。扩展名将确定其压缩格式.\\n如:file.zip, file.tar, file.bzip, file.gzip';
     $cn['RemSel'] = '删除选中项';
     $cn['NoDestDir'] = '未选择目标目录';
     $cn['DestEqOrig'] = '目标目录和原始目录相同';
@@ -413,7 +413,7 @@ function et($tag){
     $cn['ConfExec'] = '确认执行';
     $cn['ConfRem'] = '确认删除';
     $cn['EmptyDir'] = '空目录';
-    $cn['IOError'] = 'I/O 错误';
+    $cn['IOError'] = 'I/O错误';
     $cn['FileMan'] = 'PHP文件管理器';
     $cn['TypePass'] = '请输入密码';
     $cn['InvPass'] = '密码错误';
